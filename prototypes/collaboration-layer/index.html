@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruitment Platform Prototype</title>
+    <!-- Rationale: Tailwind CSS is used for rapid, utility-first styling, consistent with the pragmatic approach. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Rationale: Lucide icons are used for clear, professional iconography. They are loaded as a single script for simplicity. -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Rationale: The design library specifies GT Walsheim as the primary font. It is imported here to ensure brand consistency. */
+        @import url('https://fonts.cdnfonts.com/css/gt-walsheim');
+        body { 
+            font-family: 'GT Walsheim', sans-serif; 
+            background-color: #F8F9FA;
+            overflow-x: hidden;
+        }
+        /* Helper class to hide pages not in view */
+        .page-hidden {
+            display: none;
+        }
+        /* Tooltip styles */
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+        }
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: 8px;
+            background-color: #1f2937; /* bg-gray-800 */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .tooltip-container:hover .tooltip {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container" class="flex w-full h-screen bg-gray-100">
+        
+        <!-- === SIDEBAR NAVIGATION === -->
+        <div class="w-14 bg-slate-900 h-screen flex-shrink-0 flex flex-col items-center py-4 space-y-6 text-white/80">
+            <div class="text-white text-2xl font-bold">S</div>
+            <div class="tooltip-container">
+                <button class="p-2 rounded-lg bg-white/20"><i data-lucide="user" class="w-5 h-5"></i></button>
+                <div class="tooltip">Dashboard</div>
+            </div>
+            <div class="tooltip-container">
+                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="search" class="w-5 h-5"></i></button>
+                <div class="tooltip">Search</div>
+            </div>
+            <div class="tooltip-container">
+                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="file-text" class="w-5 h-5"></i></button>
+                <div class="tooltip">Tasks</div>
+            </div>
+            <div class="tooltip-container">
+                 <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="briefcase" class="w-5 h-5"></i></button>
+                 <div class="tooltip">Calendar</div>
+            </div>
+             <div class="tooltip-container">
+                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="users" class="w-5 h-5"></i></button>
+                <div class="tooltip">Reports</div>
+            </div>
+        </div>
+
+        <!-- === MAIN CONTENT AREA === -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+            <!-- Header -->
+            <div id="header" class="w-full bg-white border-b border-gray-200 p-4 flex justify-between items-center flex-shrink-0">
+                 <div>
+                    <nav id="breadcrumbs" class="text-sm text-gray-500"></nav>
+                    <h2 id="page-title" class="text-xl font-bold text-gray-800 mt-1"></h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">JS</div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div id="page-content" class="flex-1">
+                <!-- Job Overview Page -->
+                <div id="job-overview-page" class="page-container p-8 space-y-6 bg-gray-50/50"></div>
+                <!-- Candidate List Page -->
+                <div id="candidate-list-page" class="page-container p-8 bg-gray-50/50 page-hidden"></div>
+                <!-- Candidate Profile Page -->
+                <div id="candidate-profile-page" class="page-container p-8 bg-gray-50/50 page-hidden"></div>
+            </div>
+        </main>
+
+        <!-- === GLOBAL ACTION BAR (For both V1 and V2) === -->
+        <div id="action-bar" class="fixed top-1/2 right-4 -translate-y-1/2 p-2 bg-slate-900 border border-slate-700 rounded-full shadow-lg z-50">
+            <div class="flex flex-col gap-2">
+                <div class="tooltip-container">
+                    <button id="toggle-comments-panel-button" class="p-2 text-teal-400 hover:bg-slate-700 rounded-full">
+                        <i data-lucide="message-square" class="w-6 h-6"></i>
+                    </button>
+                    <div class="tooltip">Collaboration</div>
+                </div>
+                <div class="tooltip-container" id="ai-button-container">
+                    <button id="toggle-ai-panel-button" class="p-2 text-purple-400 hover:bg-slate-700 rounded-full">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </button>
+                    <div class="tooltip">AI Agent</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === COLLABORATION PANEL === -->
+        <div id="collaboration-panel" class="fixed top-0 right-0 h-full w-[400px] bg-slate-900 border-l border-slate-700 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50">
+             <div class="flex flex-col h-full">
+                <!-- Panel Header -->
+                <div class="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
+                    <div>
+                        <h3 id="panel-title" class="font-bold text-white"></h3>
+                        <p id="panel-subtitle" class="text-sm text-gray-400 truncate w-80"></p>
+                    </div>
+                    <button id="close-panel-button" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                
+                <!-- Comments View -->
+                <div id="comments-view" class="flex flex-col h-full">
+                    <!-- Panel Tabs -->
+                    <div class="p-2 border-b border-slate-700 flex gap-2 flex-shrink-0">
+                        <button id="team-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white">
+                            <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>Team Comments
+                        </button>
+                        <button id="private-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800">
+                            <i data-lucide="lock" class="w-4 h-4 inline mr-2"></i>My Private Notes
+                        </button>
+                    </div>
+                    <!-- Content Area -->
+                    <div id="panel-content" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+                    <!-- Input Area -->
+                    <div class="p-4 border-t border-slate-700 bg-slate-800 relative flex-shrink-0">
+                        <div id="mentions-popup" class="absolute bottom-full left-4 right-4 mb-2 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto hidden"></div>
+                        <div class="relative">
+                            <textarea id="comment-input" placeholder="Add a comment... type '@' to mention" class="w-full border border-slate-600 bg-slate-700 text-white rounded-lg p-2 pr-20 resize-none focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-400" rows="3"></textarea>
+                            <div class="absolute right-2 top-2 flex flex-col gap-2">
+                                <button id="post-button" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                <button id="attach-button" class="text-gray-400 p-2 rounded-md hover:bg-slate-600"><i data-lucide="paperclip" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI View (Unified for V1 and V2) -->
+                <div id="ai-view" class="hidden flex-1 flex-col p-4">
+                    <div class="bg-slate-800 p-3 rounded-lg flex-1 flex flex-col">
+                        <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                            <h4 class="text-sm font-bold text-gray-200 flex items-center"><i data-lucide="sparkles" class="w-4 h-4 mr-2 text-purple-500"></i>AI Assistant</h4>
+                        </div>
+                        <div id="ai-output" class="text-sm text-gray-300 bg-slate-900 p-2 rounded-md border border-slate-700 flex-1 overflow-y-auto">
+                            <p class="text-gray-400">Select an action below to begin.</p>
+                        </div>
+                        <div id="ai-actions" class="flex flex-wrap gap-2 mt-2 flex-shrink-0">
+                            <!-- AI action buttons will be populated here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- === VERSION SWITCHER === -->
+    <div class="fixed bottom-4 right-4 z-50 bg-slate-900 border border-slate-700 rounded-full shadow-lg p-1 flex items-center gap-1 text-sm font-medium">
+        <button id="v1-button" class="px-4 py-1 rounded-full bg-slate-700 text-white">V1</button>
+        <button id="v2-button" class="px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800">V2</button>
+    </div>
+
+    <script>
+        // Rationale: All application logic is encapsulated within this script tag.
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- MOCK DATA --- //
+            const MOCK_DATA = {
+                jobs: [{ id: 'job-1', title: 'Director of Office Supplies and General Happiness Distribution', owner: 'Rui Freitas', users: ['Miguel Carneiro', 'Joana Sousa', 'João Pinho', 'Rui Freitas', 'First Lasto'], type: 'Job Position', workflow: ['New', 'Qualified', 'Disqualified', 'Rejected'] }],
+                candidates: { 'job-1': [{ id: 'cand-1', firstName: 'Jeremy', lastName: 'James', status: 'Second Contact', applied: '24/05/2025', stars: 4, stage: 'Video Interview sent' }, { id: 'cand-2', firstName: 'António', lastName: 'Gomes', status: 'none', applied: '22/05/2025', stars: 0, stage: 'Requested' }, { id: 'cand-3', firstName: 'Rui', lastName: 'Freitas', status: 'none', applied: '20/05/2025', stars: 0, stage: '-' }] },
+                candidateProfiles: { 'cand-1': { name: 'Jeremy James', email: 'jeremy.james@skeeled.com', phone: '(934) 562-542', title: 'Entry Point' }, 'cand-2': { name: 'António Gomes', email: 'antonio.gomes@example.com', phone: '(123) 456-789', title: 'Senior Developer' }, 'cand-3': { name: 'Rui Freitas', email: 'rui.freitas@example.com', phone: '(987) 654-321', title: 'Project Manager' } },
+                comments: {
+                    'job-1': [
+                        { id: 99, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: '@Rui Freitas I have reviewed the job description but it needs a few adjustments before we can approve. Please review my feedback.', timestamp: '15 minutes ago', type: 'team', cta: { text: 'Review Job Changes', action: "console.log('CTA Clicked: Navigate to job editor.')" } },
+                        { id: 1, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Workflow seems solid, but we need to refine the post-application steps.', timestamp: '2 hours ago', type: 'team' }, 
+                        { id: 3, user: 'Rui Freitas', avatarColor: 'bg-blue-500', text: 'Received approval from management. Ready to start sourcing.', timestamp: '3 days ago', type: 'team' }
+                    ],
+                    'cand-1': [
+                        { id: 5, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Excellent video interview. Strong technical skills, but let's check cultural fit in the next round.", timestamp: '45 minutes ago', type: 'team' }, 
+                        { id: 6, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Agreed. @Rui Freitas can you schedule the team interview for next week?', timestamp: '30 minutes ago', type: 'team' }
+                    ],
+                    'cand-2': [{ id: 7, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Just sourced this candidate from an in-app source. Looks promising.", timestamp: '1 hour ago', type: 'team' }]
+                },
+                privateNotes: { 'job-1': [{ id: 1, text: 'Remember to check budget constraints before extending an offer.', timestamp: '1 day ago' }], 'cand-1': [{ id: 2, text: 'Follow up on their reference from BigTech Corp.', timestamp: '5 hours ago' }] }
+            };
+            const MOCK_AI_RESPONSES = {
+                v1: {
+                    summarize: {
+                        'job-1': "The team has finalized the job workflow and received management approval. The main outstanding action is a request from Joana for Rui to review and adjust the job description based on her feedback before final approval.",
+                        'cand-1': "Miguel and Joana are aligned that the candidate is technically strong after the video interview. The key next step is a team interview to assess cultural fit, which Joana has asked Rui to schedule.",
+                    },
+                    analyze: {
+                        'cand-1': "<strong>Strengths:</strong> Strong technical performance in video interview. \n<strong>Areas for Review:</strong> Cultural fit needs to be assessed. Candidate has multiple active applications within the company, suggesting high interest.",
+                    },
+                    suggestReply: {
+                        'job-1': "Thanks for the feedback, @Joana Sousa. I'll review the changes and get back to you shortly.",
+                    }
+                },
+                v2: {
+                    'job-summarize': "Summary: The main action for this job is for Rui to review Joana's feedback on the job description before approval.",
+                    'job-analyze-pipeline': "Analysis: The pipeline shows healthy top-of-funnel activity, but the conversion rate from 'Qualified' to 'Interview' is below the company average of 25%. Suggest re-evaluating screening criteria.",
+                    'job-suggest-sourcing': "Suggestion: Based on the role requirements, consider sourcing from technical communities like 'Dev.to' and 'Stack Overflow Jobs' to supplement existing channels.",
+                    'cand-summarize': "Summary: Feedback is positive on technical skills. The next step is a team interview to assess cultural fit, which needs to be scheduled.",
+                    'cand-analyze': "Analysis: Strengths are in backend development (Python, Node.js). Weaknesses identified in frontend framework experience. High interest in the company is a positive signal.",
+                    'cand-draft-email': "Draft: Hi Jeremy, Thanks for your time in the video interview. The team was impressed with your technical background. We'd like to invite you for a team interview to discuss cultural fit. Are you available next Tuesday or Thursday afternoon? Best, [Your Name]",
+                }
+            };
+            const usersForMentions = ['Rui Freitas', 'Joana Sousa', 'Miguel Carneiro', 'João Pinho', 'First Lasto', 'Admin User'];
+
+            // --- STATE MANAGEMENT --- //
+            let state = {
+                appVersion: 'V1',
+                currentPage: 'job-overview',
+                isPanelOpen: false,
+                panelContext: {},
+                activePanelTab: 'team',
+                activePanelView: 'comments', // 'comments' or 'ai'
+                comments: [],
+                privateNotes: [],
+            };
+
+            // --- DOM ELEMENT REFERENCES --- //
+            const dom = {
+                header: document.getElementById('header'),
+                breadcrumbs: document.getElementById('breadcrumbs'),
+                pageTitle: document.getElementById('page-title'),
+                pages: {
+                    jobOverview: document.getElementById('job-overview-page'),
+                    candidateList: document.getElementById('candidate-list-page'),
+                    candidateProfile: document.getElementById('candidate-profile-page')
+                },
+                panel: document.getElementById('collaboration-panel'),
+                closePanelButton: document.getElementById('close-panel-button'),
+                panelTitle: document.getElementById('panel-title'),
+                panelSubtitle: document.getElementById('panel-subtitle'),
+                commentsView: document.getElementById('comments-view'),
+                aiView: document.getElementById('ai-view'),
+                teamTabButton: document.getElementById('team-tab-button'),
+                privateTabButton: document.getElementById('private-tab-button'),
+                panelContent: document.getElementById('panel-content'),
+                commentInput: document.getElementById('comment-input'),
+                mentionsPopup: document.getElementById('mentions-popup'),
+                postButton: document.getElementById('post-button'),
+                attachButton: document.getElementById('attach-button'),
+                aiOutput: document.getElementById('ai-output'),
+                aiActions: document.getElementById('ai-actions'),
+                // Versioning
+                v1Button: document.getElementById('v1-button'),
+                v2Button: document.getElementById('v2-button'),
+                toggleCommentsButton: document.getElementById('toggle-comments-panel-button'),
+                toggleAiButton: document.getElementById('toggle-ai-panel-button'),
+                aiButtonContainer: document.getElementById('ai-button-container'),
+            };
+
+            // --- RENDER FUNCTIONS --- //
+            const renderIcons = () => { if (typeof lucide !== 'undefined') { lucide.createIcons(); } };
+            const renderBreadcrumbs = () => {
+                let crumbs = [];
+                if (state.currentPage === 'job-overview') crumbs = ['Dashboard', 'Jobs', 'Overview'];
+                else if (state.currentPage === 'candidate-list') crumbs = ['Dashboard', 'Jobs', 'Applicants'];
+                else if (state.currentPage.startsWith('cand-')) {
+                    const candidateName = MOCK_DATA.candidateProfiles[state.currentPage]?.name || 'Candidate';
+                    crumbs = ['Dashboard', 'Jobs', 'Applicants', candidateName];
+                }
+                dom.breadcrumbs.innerHTML = crumbs.map((crumb, index) => `<span>${index > 0 ? '<span class="mx-2">/</span>' : ''}<a href="#" class="hover:text-blue-500 ${index === crumbs.length - 1 ? 'text-gray-800 font-medium' : ''}">${crumb}</a></span>`).join('');
+                dom.pageTitle.textContent = crumbs[crumbs.length - 1] || '';
+            };
+            const renderJobOverview = () => {
+                const job = MOCK_DATA.jobs[0];
+                dom.pages.jobOverview.innerHTML = `
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <div class="flex justify-between items-start">
+                            <div>${['Owner', 'Users', 'Job type', 'Workflow'].map(label => {
+                                let content = '';
+                                if(label === 'Owner') content = `<span class="flex items-center gap-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-blue-500 rounded-full"></div>${job.owner}</span>`;
+                                if(label === 'Users') content = `<div class="flex items-center gap-2">${job.users.map(u => `<span class="flex items-center gap-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-gray-300 rounded-full"></div> ${u}</span>`).join('')}</div>`;
+                                if(label === 'Job type') content = `<span>${job.type}</span>`;
+                                if(label === 'Workflow') content = `<span class="text-gray-600">${job.workflow.join(' > ')}</span>`;
+                                return `<div class="flex items-center gap-4 mb-4"><span class="text-sm text-gray-500 w-20">${label}</span>${content}</div>`;
+                            }).join('')}</div>
+                            <div class="flex flex-col space-y-2">
+                                <button class="bg-[#41B6E6] text-white px-6 py-2 rounded-md hover:bg-[#3aa3cf]">Duplicate</button>
+                                <button onclick="window.app.setPage('candidate-list')" class="bg-[#41B6E6] text-white px-6 py-2 rounded-md hover:bg-[#3aa3cf]">View Candidates</button>
+                                <button class="bg-[#3A4A64] text-white px-6 py-2 rounded-md hover:bg-[#313e54]">Archive</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="font-bold text-gray-800 mb-4">Post-application steps</h3>
+                        <div class="border border-dashed border-gray-300 rounded-lg p-10 flex flex-col items-center justify-center"><button class="text-blue-500 font-semibold hover:text-blue-600">Add template</button></div>
+                    </div>`;
+            };
+            const renderCandidateList = () => {
+                const candidates = MOCK_DATA.candidates['job-1'];
+                dom.pages.candidateList.innerHTML = `
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <div class="p-4 border-b flex justify-between items-center">
+                             <div class="flex items-center gap-2">
+                                <div class="relative"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" placeholder="Search" class="border rounded-md pl-9 pr-3 py-1.5 w-64 focus:ring-2 focus:ring-blue-500 outline-none"/></div>
+                                <button class="bg-[#41B6E6] text-white px-4 py-1.5 rounded-md hover:bg-[#3aa3cf]">Search</button>
+                            </div>
+                            <button class="border rounded-md px-3 py-1.5 flex items-center gap-2 text-gray-600 hover:bg-gray-100"><i data-lucide="filter" class="w-4 h-4"></i> Filters</button>
+                        </div>
+                        <table class="w-full text-left text-sm">
+                            <thead><tr class="border-b bg-gray-50 text-gray-600">${['<input type="checkbox"/>', 'First name', 'Last name', 'Status', 'Applied', 'Stars', 'Steps'].map(h => `<th class="p-4 font-medium">${h}</th>`).join('')}</tr></thead>
+                            <tbody>${candidates.map(c => `<tr class="border-b hover:bg-blue-50/50">
+                                <td class="p-4"><input type="checkbox" /></td>
+                                <td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.firstName}</td>
+                                <td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.lastName}</td>
+                                <td class="p-4"><span class="border rounded px-2 py-0.5">${c.status}</span></td>
+                                <td class="p-4">${c.applied}</td>
+                                <td class="p-4">${c.stars > 0 ? `${c.stars} ⭐` : '-'}</td>
+                                <td class="p-4">${c.stage}</td>
+                            </tr>`).join('')}</tbody>
+                        </table>
+                    </div>`;
+            };
+            const renderCandidateProfile = (candidateId) => {
+                const profile = MOCK_DATA.candidateProfiles[candidateId];
+                 dom.pages.candidateProfile.innerHTML = `
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-8">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-20 h-20 bg-gray-700 rounded-full"></div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-800">${profile.name}</h2>
+                                    <p class="text-gray-500">${profile.title}</p>
+                                    <div class="text-sm mt-2 space-y-1">
+                                        <p>Email: <a href="#" class="text-blue-500">${profile.email}</a></p>
+                                        <p>Phone: ${profile.phone}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div><button class="bg-blue-500 text-white px-8 py-2 rounded-md font-semibold hover:bg-blue-600">Hire</button></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="col-span-1 space-y-4">
+                                <h4 class="font-bold">Tags</h4>
+                                <div class="flex flex-wrap gap-2"><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">Archived ❌</span><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">HS Skills ❌</span></div>
+                            </div>
+                            <div class="col-span-2 space-y-4">
+                                <h4 class="font-bold">Score Card 3.5</h4>
+                                <div class="border rounded-md">
+                                    <div class="p-3 border-b flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div>
+                                    <div class="p-3 flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            };
+            const renderPanelContent = () => {
+                if(state.activePanelTab === 'team') {
+                    dom.panelContent.innerHTML = state.comments.length > 0 ? state.comments.map(c => `
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 rounded-full flex-shrink-0 ${c.avatarColor} flex items-center justify-center text-white text-sm font-bold">${c.user.charAt(0)}</div>
+                            <div>
+                                <div class="flex items-baseline gap-2"><span class="font-bold text-gray-200 text-sm">${c.user}</span><span class="text-xs text-gray-400">${c.timestamp}</span></div>
+                                <p class="text-sm text-gray-300">${c.text.replace(/(@\w+\s*\w*)/g, '<strong class="text-blue-400 font-medium">$1</strong>')}</p>
+                                ${c.cta ? `<div class="mt-2"><button onclick="${c.cta.action}" class="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-blue-600">${c.cta.text}</button></div>` : ''}
+                            </div>
+                        </div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">No team comments yet.</p>`;
+                } else {
+                     dom.panelContent.innerHTML = state.privateNotes.length > 0 ? state.privateNotes.map(n => `
+                        <div class="bg-yellow-900/50 border border-yellow-700/50 p-3 rounded-md">
+                            <p class="text-sm text-yellow-300">${n.text}</p>
+                            <p class="text-right text-xs text-yellow-500 mt-2">${n.timestamp}</p>
+                        </div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">You have no private notes here.</p>`;
+                }
+            };
+            const renderPanelView = () => {
+                if(state.activePanelView === 'comments') {
+                    dom.commentsView.style.display = 'flex';
+                    dom.aiView.style.display = 'none';
+                    dom.panelTitle.textContent = state.panelContext.type === 'Job' ? 'Job Activity' : `Activity: ${state.panelContext.name}`;
+                } else { // 'ai'
+                    dom.commentsView.style.display = 'none';
+                    dom.aiView.style.display = 'flex';
+                    dom.panelTitle.textContent = 'AI Assistant';
+                    renderAiActions();
+                }
+                renderIcons();
+            };
+            const renderAiActions = () => {
+                let actions = [];
+                if (state.appVersion === 'V1') {
+                    const contextId = state.panelContext.id;
+                    if(MOCK_AI_RESPONSES.v1.summarize[contextId]) actions.push({ label: 'Summarize Thread', handler: `window.app.handleAiAction('summarize')`});
+                    if(state.panelContext.type === 'Candidate' && MOCK_AI_RESPONSES.v1.analyze[contextId]) actions.push({ label: 'Analyze Candidate', handler: `window.app.handleAiAction('analyze')`});
+                    if(MOCK_AI_RESPONSES.v1.suggestReply[contextId]) actions.push({ label: 'Suggest Reply', handler: `window.app.handleAiAction('suggestReply')`});
+                } else { // V2
+                    if(state.panelContext.type === 'Job') {
+                        actions.push({ label: "Summarize thread", handler: "window.app.handleAiAction('job-summarize')" });
+                        actions.push({ label: "Analyze pipeline", handler: "window.app.handleAiAction('job-analyze-pipeline')" });
+                        actions.push({ label: "Suggest sourcing", handler: "window.app.handleAiAction('job-suggest-sourcing')" });
+                    } else { // Candidate
+                        actions.push({ label: "Summarize feedback", handler: "window.app.handleAiAction('cand-summarize')" });
+                        actions.push({ label: "Analyze strengths", handler: "window.app.handleAiAction('cand-analyze')" });
+                        actions.push({ label: "Draft outreach email", handler: "window.app.handleAiAction('cand-draft-email')" });
+                    }
+                }
+                dom.aiOutput.innerHTML = `<p class="text-gray-400">Select an action below.</p>`;
+                dom.aiActions.innerHTML = actions.map(action => `<button onclick="${action.handler}" class="bg-slate-700 border border-slate-600 text-gray-300 text-xs px-2 py-1 rounded-md hover:bg-slate-600">${action.label}</button>`).join('');
+            };
+            const renderAppVersion = () => {
+                if (state.appVersion === 'V1') {
+                    dom.v1Button.className = 'px-4 py-1 rounded-full bg-slate-700 text-white';
+                    dom.v2Button.className = 'px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800';
+                    dom.aiButtonContainer.classList.add('hidden');
+                     if (state.isPanelOpen && state.activePanelView === 'ai') {
+                        togglePanel(false);
+                    }
+                } else { // V2
+                    dom.v2Button.className = 'px-4 py-1 rounded-full bg-slate-700 text-white';
+                    dom.v1Button.className = 'px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800';
+                    dom.aiButtonContainer.classList.remove('hidden');
+                }
+                if (state.isPanelOpen && state.activePanelView === 'ai') {
+                    renderAiActions();
+                }
+            };
+            
+            // --- LOGIC & EVENT HANDLERS --- //
+            const handleInput = () => {
+                const text = dom.commentInput.value;
+                const lastWord = text.split(' ').pop();
+                if(lastWord.startsWith('@')) {
+                    const query = lastWord.substring(1).toLowerCase();
+                    const filteredUsers = usersForMentions.filter(u => u.toLowerCase().includes(query));
+                    if (filteredUsers.length > 0) {
+                        dom.mentionsPopup.innerHTML = filteredUsers.map(u => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-sm mention-user text-white" data-user="${u}">${u}</div>`).join('');
+                        dom.mentionsPopup.classList.remove('hidden');
+                    } else { dom.mentionsPopup.classList.add('hidden'); }
+                } else { dom.mentionsPopup.classList.add('hidden'); }
+            };
+
+            const setPage = (page) => {
+                state.currentPage = page;
+                if (page === 'job-overview' || page === 'candidate-list') {
+                    const job = MOCK_DATA.jobs[0];
+                    state.panelContext = { type: 'Job', name: job.title, id: job.id };
+                } else if (page.startsWith('cand-')) {
+                    const profile = MOCK_DATA.candidateProfiles[page];
+                    state.panelContext = { type: 'Candidate', name: profile.name, id: page };
+                }
+                updatePanelForContext();
+                Object.values(dom.pages).forEach(p => p.classList.add('page-hidden'));
+                if (page === 'job-overview') {
+                    dom.pages.jobOverview.classList.remove('page-hidden');
+                    renderJobOverview();
+                } else if (page === 'candidate-list') {
+                    dom.pages.candidateList.classList.remove('page-hidden');
+                    renderCandidateList();
+                } else if (page.startsWith('cand-')) {
+                    dom.pages.candidateProfile.classList.remove('page-hidden');
+                    renderCandidateProfile(page);
+                }
+                renderBreadcrumbs();
+                renderIcons(); 
+            };
+
+            const togglePanel = (forceOpen = null, view = 'comments') => {
+                const shouldOpen = forceOpen !== null ? forceOpen : !state.isPanelOpen;
+                if (shouldOpen) {
+                    state.isPanelOpen = true;
+                    state.activePanelView = view;
+                    renderPanelView();
+                    dom.panel.classList.remove('translate-x-full');
+                } else {
+                    state.isPanelOpen = false;
+                    dom.panel.classList.add('translate-x-full');
+                }
+            };
+
+            const setPanelTab = (tab) => {
+                state.activePanelTab = tab;
+                if(tab === 'team') {
+                    dom.teamTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white";
+                    dom.privateTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800";
+                } else {
+                    dom.privateTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white";
+                    dom.teamTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800";
+                }
+                renderPanelContent();
+                renderIcons();
+            }
+
+            const updatePanelForContext = () => {
+                const { type, name, id } = state.panelContext;
+                dom.panelSubtitle.textContent = type === 'Job' ? name : `${type}: ${name}`;
+                state.comments = MOCK_DATA.comments[id] || [];
+                state.privateNotes = MOCK_DATA.privateNotes[id] || [];
+                renderPanelContent();
+                if(state.isPanelOpen) {
+                    renderPanelView();
+                }
+            };
+
+            const handlePost = () => {
+                const text = dom.commentInput.value.trim();
+                if (text === '') return;
+                if (state.activePanelTab === 'team') {
+                     state.comments.push({ id: Date.now(), user: 'You', avatarColor: 'bg-purple-500', text: text, timestamp: 'Just now', type: 'team' });
+                } else {
+                    state.privateNotes.push({ id: Date.now(), text: text, timestamp: 'Just now' });
+                }
+                dom.commentInput.value = '';
+                renderPanelContent();
+            };
+
+            const handleAiAction = (actionType) => {
+                let response;
+                if (state.appVersion === 'V1') {
+                    const contextId = state.panelContext.id;
+                    const actionCategory = Object.keys(MOCK_AI_RESPONSES.v1).find(key => MOCK_AI_RESPONSES.v1[key][contextId]);
+                    response = MOCK_AI_RESPONSES.v1[actionCategory]?.[contextId];
+                } else { //V2
+                    response = MOCK_AI_RESPONSES.v2[actionType];
+                }
+                
+                dom.aiOutput.innerHTML = `<p class="text-gray-500 animate-pulse">Thinking...</p>`;
+                setTimeout(() => {
+                    dom.aiOutput.innerHTML = response || `No suggestion available for this context.`;
+                }, 750);
+            };
+
+            const setVersion = (version) => {
+                state.appVersion = version;
+                renderAppVersion();
+            };
+
+            // --- INITIALIZATION --- //
+            const init = () => {
+                // Listeners
+                dom.toggleCommentsButton.addEventListener('click', () => togglePanel(null, 'comments'));
+                dom.toggleAiButton.addEventListener('click', () => togglePanel(null, 'ai'));
+                dom.closePanelButton.addEventListener('click', () => togglePanel(false));
+                dom.teamTabButton.addEventListener('click', () => setPanelTab('team'));
+                dom.privateTabButton.addEventListener('click', () => setPanelTab('private'));
+                dom.postButton.addEventListener('click', handlePost);
+                dom.commentInput.addEventListener('input', handleInput);
+                dom.mentionsPopup.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('mention-user')) {
+                        const user = e.target.dataset.user;
+                        const words = dom.commentInput.value.split(' ');
+                        words.pop();
+                        dom.commentInput.value = words.join(' ') + ` @${user} `;
+                        dom.mentionsPopup.classList.add('hidden');
+                        dom.commentInput.focus();
+                    }
+                });
+                dom.v1Button.addEventListener('click', () => setVersion('V1'));
+                dom.v2Button.addEventListener('click', () => setVersion('V2'));
+
+                // Initial setup
+                setPage('job-overview');
+                renderAppVersion();
+                window.app = { setPage, handleAiAction };
+                renderIcons();
+            };
+            
+            init();
+        });
+    </script>
+</body>
+</html>
+
