@@ -1,18 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 Vision Hub - Main Index</title>
+    <title>PrototypesHub-2026 | Feature Vision</title>
+    
+    <!-- Using the same external styles as your prototype for consistency -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.cdnfonts.com/css/gt-walsheim" rel="stylesheet">
+    
+    <style>
+        /* Ensuring the custom font is used */
+        body {
+            font-family: 'GT Walsheim', sans-serif;
+        }
+        /* Custom Tailwind config for aesthetic consistency */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#007AB8', // Your core brand blue
+                        'light-bg': '#f8fafc',    // Clean slate-50 background
+                        'dark-text': '#1e293b',   // Dark slate-800
+                    },
+                    boxShadow: {
+                        'custom': '0 4px 10px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+    </style>
 </head>
-<body>
-    <h1>Welcome to the 2026 Feature Vision Hub</h1>
-    <p>Please select a prototype to view:</p>
-    <ul>
-        <li>
-            <a href="prototypes/sourcing-hub/" target="_blank">Prototype 1: The New Sourcing Hub (V2)</a>
-            <a href="prototypes/collaboration-layer/" target="_blank">Prototype 2: The collaboratipon layer</a>
-        </li>
-        </ul>
+<body class="bg-light-bg text-dark-text min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-3xl p-8 bg-white rounded-xl shadow-custom">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-10 pb-6 border-b border-gray-200">
+            <h1 class="text-4xl font-extrabold tracking-tight text-primary-blue">
+                PrototypesHub-2026
+            </h1>
+            <p class="text-xl text-gray-500 mt-2">
+                A Unified Vision for Next-Generation Features
+            </p>
+        </header>
+
+        <!-- Prototype List Section -->
+        <div class="space-y-4">
+            <h2 class="text-2xl font-semibold mb-6">Available Prototypes</h2>
+            
+            <!-- Prototype Card 1: Sourcing Hub -->
+            <a href="prototypes/sourcing-hub/" target="_blank" class="block">
+                <div class="p-5 border border-gray-200 rounded-lg transition-all duration-200 hover:bg-light-bg hover:border-primary-blue hover:shadow-lg flex justify-between items-center">
+                    <div>
+                        <p class="text-lg font-bold">Prototype 1.1: Sourcing Hub (V2)</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Focus: AI-driven candidate matching and integrated recruiting pipeline.
+                        </p>
+                    </div>
+                    <!-- Right arrow icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary-blue group-hover:translate-x-1 transition-transform">
+                        <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Prototype Card 2: Collaboration Layer -->
+            <a href="prototypes/collaboration-layer/" target="_blank" class="block">
+                <div class="p-5 border border-gray-200 rounded-lg transition-all duration-200 hover:bg-light-bg hover:border-primary-blue hover:shadow-lg flex justify-between items-center">
+                    <div>
+                        <p class="text-lg font-bold">Prototype 2.1: Collaboration Layer</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Focus: Real-time team communication and shared candidate feedback in-app.
+                        </p>
+                    </div>
+                    <!-- Right arrow icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary-blue group-hover:translate-x-1 transition-transform">
+                        <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Prototype Card 3: Job Description AI -->
+            <a href="prototypes/job-description/" target="_blank" class="block">
+                <div class="p-5 border border-gray-200 rounded-lg transition-all duration-200 hover:bg-light-bg hover:border-primary-blue hover:shadow-lg flex justify-between items-center">
+                    <div>
+                        <p class="text-lg font-bold">Prototype 3.1: Job Description AI</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Focus: AI drafting, bias detection, and optimization for search ranking.
+                        </p>
+                    </div>
+                    <!-- Right arrow icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary-blue group-hover:translate-x-1 transition-transform">
+                        <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+
+
+        </div>
+        
+        <!-- Footer/Branding -->
+        <footer class="mt-10 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
+            Deployed via Netlify using Continuous Deployment from GitHub.
+        </footer>
+
+    </div>
+
 </body>
 </html>
