@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Job Publication Flow</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* Import GT Walsheim font */
+        @import url('https://fonts.cdnfonts.com/css/gt-walsheim');
+
+        /* Custom Design Library Variables */
+        :root {
+            --font-size: 14px;
+            --background: rgba(255, 255, 255, 1.00);
+            --foreground: rgba(58, 74, 100, 1.00);
+            --card: rgba(255, 255, 255, 1.00);
+            --card-foreground: rgba(58, 74, 100, 1.00);
+            --primary: rgba(65, 182, 230, 1.00);
+            --primary-foreground: rgba(255, 255, 255, 1.00);
+            --secondary: rgba(58, 74, 100, 1.00);
+            --secondary-foreground: rgba(255, 255, 255, 1.00);
+            --muted: rgba(216, 219, 224, 1.00);
+            --muted-foreground: rgba(137, 146, 162, 1.00);
+            --accent: rgba(126, 211, 33, 1.00); /* Green used for active status */
+            --border: rgba(216, 219, 224, 1.00);
+            --sidebar: linear-gradient(180deg, rgba(60, 98, 129, 1.00) 0%, rgba(58, 74, 100, 1.00) 59.375%);
+            --sidebar-foreground: rgba(255, 255, 255, 1.00);
+            --radius: 4px; /* Base radius */
+            --radius-lg: 8px; /* New, slightly larger radius for cards/containers for softer look */
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Lighter shadow */
+
+            /* Typography variables */
+            --text-2xl: 30px;
+            --text-xl: 20px;
+            --text-lg: 16px;
+            --text-base: 14px;
+            --text-sm: 12px;
+            --font-weight-bold: 700;
+            --font-weight-medium: 500;
+            --font-weight-regular: 400;
+        }
+
+        /* Tailwind Configuration Mapping */
+        :root {
+            --tw-bg-opacity: 1;
+            --tw-text-opacity: 1;
+            --tw-border-opacity: 1;
+        }
+
+        /* Custom Tailwind colors based on variables */
+        .bg-primary { background-color: var(--primary); }
+        .text-primary-foreground { color: var(--primary-foreground); }
+        .bg-secondary { background-color: var(--secondary); }
+        .text-secondary { color: var(--secondary); }
+        .text-foreground { color: var(--foreground); }
+        .text-muted-foreground { color: var(--muted-foreground); }
+        .bg-card { background-color: var(--card); }
+        .border-border { border-color: var(--border); }
+        .text-accent { color: var(--accent); }
+        .bg-sidebar { background: var(--sidebar); }
+        .text-sidebar-foreground { color: var(--sidebar-foreground); }
+        .shadow-sm { box-shadow: var(--shadow-subtle); } /* Applying subtle shadow */
+
+        body {
+            font-family: 'GT Walsheim', sans-serif;
+            font-size: var(--font-size);
+            color: var(--foreground);
+            background-color: #f7f9fb; /* Lighter background than pure white */
+            margin: 0;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        /* Utility for the rounded corners based on design library */
+        .rounded-base { border-radius: var(--radius); }
+        .rounded-lg-custom { border-radius: var(--radius-lg); }
+
+        /* Typography styles */
+        h1 { font-size: var(--text-2xl); font-weight: var(--font-weight-bold); }
+        h2 { font-size: var(--text-xl); font-weight: var(--font-weight-bold); }
+        h3 { font-size: var(--text-lg); font-weight: var(--font-weight-bold); }
+        .text-base-weight { font-size: var(--text-base); font-weight: var(--font-weight-bold); }
+        .text-sm-label { font-size: var(--text-sm); font-weight: var(--font-weight-regular); }
+        .text-sm-medium { font-size: var(--text-sm); font-weight: var(--font-weight-medium); }
+
+        /* Custom Button Styles (Primary/Secondary from screenshots) */
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            padding: 8px 16px;
+            border-radius: var(--radius-lg); /* Softer corners */
+            font-weight: var(--font-weight-medium);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background-color: rgba(65, 182, 230, 0.9); }
+
+        .btn-secondary-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 8px 16px;
+            border-radius: var(--radius-lg); /* Softer corners */
+            font-weight: var(--font-weight-medium);
+            transition: all 0.2s;
+        }
+        .btn-secondary-outline:hover { background-color: rgba(65, 182, 230, 0.05); }
+
+        .btn-default {
+            background-color: transparent;
+            color: var(--secondary);
+            padding: 8px 16px;
+            border-radius: var(--radius-lg); /* Softer corners */
+            font-weight: var(--font-weight-medium);
+        }
+        .btn-default:hover { color: var(--primary); }
+
+        /* Input Styles */
+        input[type="text"], input[type="number"], select, textarea {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            width: 100%;
+            background-color: var(--card);
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        /* Table Styles */
+        .table-row-hover:hover {
+            background-color: #fafafa;
+            cursor: pointer;
+        }
+        
+        /* Stepper Style Improvements */
+        .stepper-circle {
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .stepper-line {
+            transition: background-color 0.3s;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Slightly darker for better focus */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background-color: var(--card);
+            border-radius: var(--radius-lg); /* Softer corners */
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Active Language Tab Style */
+        .lang-tab-active {
+            color: var(--secondary);
+            border-bottom: 2px solid var(--primary);
+            font-weight: var(--font-weight-medium);
+        }
+        .lang-tab-inactive {
+            color: var(--muted-foreground);
+            border-bottom: 2px solid transparent;
+        }
+        .lang-tab:hover {
+            color: var(--primary);
+        }
+
+        /* Language Chip Style - Step 2 Improvement */
+        .lang-chip {
+            background-color: rgba(65, 182, 230, 0.1); /* Light Primary background */
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        /* Accordion Header Style */
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        .accordion-header:hover {
+            background-color: #f7f9fb;
+        }
+        /* Accordion Content Style */
+        .accordion-content {
+            transition: max-height 0.5s ease-out, opacity 0.3s;
+            overflow: hidden;
+            /* Start collapsed */
+            max-height: 0;
+            opacity: 0;
+        }
+        .accordion-content.expanded {
+            max-height: 2000px; /* Large value to allow content to fully expand */
+            opacity: 1;
+        }
+
+        /* Floating Guide Button */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--secondary); /* Darker, less distracting color */
+            color: var(--secondary-foreground);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+        }
+        .fab:hover {
+            background-color: var(--primary); /* Hover uses primary color */
+        }
+
+        /* Guided Tour Container */
+        .guided-tour {
+            position: fixed;
+            bottom: 90px; /* Positioned above the FAB */
+            right: 24px;
+            width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background-color: var(--card);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 50;
+            border: 1px solid var(--border);
+        }
+        
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <!-- 1. Sidebar -->
+    <div class="bg-sidebar w-16 flex flex-col items-center py-4 space-y-4 text-sidebar-foreground h-full shrink-0">
+        <!-- Logo/Header Placeholder -->
+        <div class="mb-4">
+            <i class="fa-solid fa-cloud text-xl text-primary"></i>
+        </div>
+        
+        <!-- Navigation Items -->
+        <div class="flex flex-col space-y-3 w-full">
+            <div class="p-2 text-center text-primary" title="Users">
+                <i class="fa-solid fa-user text-lg"></i>
+            </div>
+            <div class="p-2 text-center sidebar-item-active" title="Jobs" onclick="setAppState('dashboard')">
+                <i class="fa-solid fa-briefcase text-lg"></i>
+            </div>
+            <div class="p-2 text-center" title="Lists">
+                <i class="fa-solid fa-list text-lg"></i>
+            </div>
+            <div class="p-2 text-center" title="Calendar">
+                <i class="fa-solid fa-calendar-alt text-lg"></i>
+            </div>
+            <div class="p-2 text-center" title="Settings">
+                <i class="fa-solid fa-cog text-lg"></i>
+            </div>
+            <div class="p-2 text-center" title="Search">
+                <i class="fa-solid fa-search text-lg"></i>
+            </div>
+        </div>
+        
+        <!-- Footer Item Placeholder -->
+        <div class="mt-auto p-2 text-center" title="Help">
+            <i class="fa-solid fa-question-circle text-lg"></i>
+        </div>
+    </div>
+
+    <!-- Main Application Area -->
+    <div class="flex flex-col flex-grow min-w-0">
+
+        <!-- 2. Header Bar -->
+        <header class="h-14 flex items-center justify-between px-6 bg-card border-b border-border shrink-0 shadow-sm">
+            <div id="breadcrumb" class="text-sm">
+                <!-- Breadcrumb will be dynamically updated by JS -->
+            </div>
+            <div class="flex items-center space-x-4">
+                <i class="fa-regular fa-bell text-xl text-muted-foreground cursor-pointer"></i>
+                <img src="https://placehold.co/32x32/d8dbe0/8992a2?text=U" alt="User Avatar" class="rounded-full w-8 h-8 border border-border">
+            </div>
+        </header>
+
+        <!-- 3. Main Content Viewport - MUST contain the scroll -->
+        <!-- FIX: Added flex-1 and overflow-y-auto to force scrolling in this container -->
+        <main class="main-content-scroll flex-1 overflow-y-auto bg-[#f7f9fb] p-6 pt-4">
+            <div id="app-content">
+                <!-- Content will be rendered here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Container (outside main app-content) -->
+    <div id="modal-container"></div>
+
+    <!-- 4. Floating Guided Tour Menu -->
+    <div id="guided-tour-container"></div>
+    <div class="fab" onclick="toggleTourGuide()">
+        <i class="fa-solid fa-route text-2xl" id="fab-icon"></i>
+    </div>
+
+    <script>
+        // --- Core Application State & Navigation Logic ---
+        let currentAppState = 'dashboard';
+        let currentJob = 'Software Engineer'; // Default job context changed to match new list
+        let createPublicationStep = 1;
+        let showSmartPopulateModal = false; // State for AI modal visibility
+        let activeLanguage = 'English'; // State for multi-language tabs
+        let showTourGuide = false; // NEW STATE for Guided Tour visibility
+        
+        // Storage for language-specific description content
+        const jobDescriptions = {
+            'English': 'The **Software Engineer** role requires deep expertise in modern cloud environments and collaborative development practices. You will be responsible for designing and implementing scalable services, ensuring code quality through unit and integration testing, and mentoring junior team members. \n\n**Key Responsibilities:**\n- Design, build, and maintain efficient, reusable, and reliable code.\n- Participate in code reviews and architectural decisions.\n- Collaborate with product managers to define feature specifications.',
+            'French': "Le rôle d'**Ingénieur Logiciel** nécessite une expertise approfondie des environnements cloud modernes et des pratiques de développement collaboratif. Vous serez responsable de la conception et de la mise en œuvre de services évolutifs, de la garantie de la qualité du code par des tests unitaires et d'intégration, et du mentorat des membres de l'équipe junior. \n\n**Responsabilités Clés :**\n- Concevoir, construire et maintenir un code efficace, réutilisable et fiable.\n- Participer aux revues de code et aux décisions d'architecture.\n- Collaborer avec les chefs de produit pour définir les spécifications des fonctionnalités."
+        };
+
+
+        const APP_ID = 'skeeled'; // Placeholder for application name
+        
+        // State management
+        function setAppState(newState, jobName = null) {
+            currentAppState = newState;
+            currentJob = jobName || currentJob; // Keep job context if not explicitly changing it
+            
+            // Only reset wizard step when moving AWAY from the creation flow
+            if (!newState.startsWith('createPublication')) {
+                createPublicationStep = 1; 
+            }
+            showSmartPopulateModal = false; // Ensure AI modal is closed
+            render();
+            // FIX: Explicitly re-render the guide after the page content updates
+            renderGuidedTour();
+        }
+
+        function setPublicationStep(step) {
+            // This function is for navigating BETWEEN wizard steps (2 -> 3)
+            createPublicationStep = step;
+            // The main app state must also be updated to ensure the correct content function is called
+            currentAppState = 'createPublicationStep' + step;
+            showSmartPopulateModal = false; // Ensure AI modal is closed
+            render();
+            // FIX: Explicitly re-render the guide after the page content updates
+            renderGuidedTour();
+        }
+
+        function setActiveLanguage(language) {
+            activeLanguage = language;
+            // In a real app, this would load content for the selected language
+            // For now, it just re-renders the step 3 content to update the display state
+            if (currentAppState === 'createPublicationStep3') {
+                // Rerender the whole step 3 to update text areas and buttons
+                document.getElementById('app-content').innerHTML = renderCreationStep3();
+                
+                // Set the specific content for the new active language
+                const textarea = document.getElementById('jobDescriptionTextarea');
+                if (textarea) {
+                    textarea.value = jobDescriptions[activeLanguage] || '';
+                }
+
+                renderSmartPopulateModal(); // Keep modal available
+                renderGuidedTour(); // Keep guide available
+            }
+        }
+        
+        function toggleTourGuide() {
+            showTourGuide = !showTourGuide;
+            renderGuidedTour();
+        }
+
+        // --- ACCORDION/COLLAPSIBLE LOGIC (Step 3 Scroll Fix) ---
+        function toggleAccordion(id) {
+            const content = document.getElementById(id + 'Content');
+            const icon = document.getElementById(id + 'Icon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+        
+        // --- GEMINI AI INTEGRATION LOGIC ---
+
+        /**
+         * Robust fetch implementation with exponential backoff for handling API rate limits.
+         */
+        async function exponentialBackoffFetch(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return response;
+                    }
+                    if (response.status === 429) { // Too Many Requests
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        console.warn(`429: Rate limit exceeded. Retrying in ${delay.toFixed(0)}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    throw new Error(`API request failed with status ${response.status}`);
+                } catch (error) {
+                    if (i === maxRetries - 1) {
+                        console.error('Max retries reached. Failing request.', error);
+                        throw error;
+                    }
+                    // For network errors, use backoff before retrying
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        /**
+         * Schema for the structured JSON output the AI must return to populate the form fields.
+         */
+        const JOB_FIELD_SCHEMA = {
+            type: "OBJECT",
+            properties: {
+                "title": { "type": "STRING", "description": "Concise and professional job title (e.g., 'Senior Frontend Engineer')." },
+                "jobCategory": { "type": "STRING", "description": "Best fit job category from the list: 'Software Development', 'Marketing and Sales', 'Human Resources', 'Finance'. Use the closest match." },
+                "employmentType": { "type": "STRING", "description": "Type of employment (e.g., 'Full-time', 'Part-time')." },
+                "contractType": { "type": "STRING", "description": "Type of contract (e.g., 'Permanent', 'Fixed-term')." },
+                "description": { "type": "STRING", "description": "Detailed job description of about 200 words, formatted with markdown paragraphs and bullet points for readability." }
+            },
+            required: ["title", "jobCategory", "employmentType", "contractType", "description"] // Removed slug
+        };
+
+
+        /**
+         * Generates and auto-populates all relevant form fields using the Gemini API.
+         */
+        async function smartPopulateForm() {
+            const modalRunButton = document.getElementById('modalRunAIButton');
+            const fileInput = document.getElementById('aiDocumentUploadModal');
+            const jobTitleInput = document.getElementById('modalJobTitleInput');
+            
+            // Check if required elements exist
+            if (!modalRunButton || !fileInput || !jobTitleInput) return;
+
+            // Collect inputs
+            const jobTitle = jobTitleInput.value || currentJob;
+            const mockDocumentContent = "We need a full stack engineer to manage our core product, focusing heavily on React and Node.js. The role is permanent, full-time, and part of the core product team. Responsibilities include API design, feature implementation, and mentorship. Must have 5+ years of experience in JavaScript frameworks and AWS."; // Mock document content
+
+            // 1. Show Loading State (inside modal)
+            modalRunButton.disabled = true;
+            modalRunButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+            document.getElementById('modalCancelButton').disabled = true;
+
+            const systemPrompt = "You are an expert HR content processing engine. You must analyze the provided job title and document content (if available) to extract and categorize all necessary job publication details. Your output MUST be a JSON object conforming strictly to the provided schema.";
+            
+            let userQuery = `Analyze the following information to auto-populate a job application page. The initial Job Folder is titled: "${jobTitle}".`;
+            userQuery += `\n\n--- Document Content (Transcript/Spec) ---\n${mockDocumentContent}`;
+            
+            const apiKey = "" // Leave as-is for Canvas
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: JOB_FIELD_SCHEMA,
+                    tools: [{ "google_search": {} }],
+                },
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            try {
+                const response = await exponentialBackoffFetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (jsonText) {
+                    const parsedJson = JSON.parse(jsonText);
+                    
+                    // 2. Populate Form Fields (Core functionality)
+                    document.getElementById('jobTitleInput').value = parsedJson.title || '';
+                    document.getElementById('jobDescriptionTextarea').value = parsedJson.description || '';
+                    
+                    // Update the language content storage only for the primary language (English)
+                    jobDescriptions['English'] = parsedJson.description || jobDescriptions['English'];
+                    
+                    // Populate Select fields by value
+                    const setSelectValue = (id, value) => {
+                        const select = document.getElementById(id);
+                        if (select) {
+                            // Find the option that contains the predicted value text (for robustness)
+                            const option = Array.from(select.options).find(opt => opt.text.includes(value) || opt.value.includes(value));
+                            if (option) {
+                                select.value = option.value;
+                            } else {
+                                // Fallback: if value doesn't exist, set to default/first option
+                                select.value = select.options[0].value;
+                            }
+                        }
+                    };
+
+                    setSelectValue('jobCategorySelect', parsedJson.jobCategory);
+                    setSelectValue('employmentTypeSelect', parsedJson.employmentType);
+                    setSelectValue('contractTypeSelect', parsedJson.contractType);
+
+                    alert('Form successfully auto-populated by AI!');
+
+                } else {
+                    alert('AI failed to generate structured content. Please check the console.');
+                    console.error('AI generation failed (JSON missing):', result);
+                }
+            } catch (error) {
+                alert('An error occurred during AI form population. See console for details.');
+                console.error('Fetch error:', error);
+            } finally {
+                // 3. Restore Button State and Close Modal
+                toggleSmartPopulateModal(false);
+            }
+        }
+
+
+        // --- Render Functions for each View ---
+        
+        function renderBreadcrumb() {
+            const breadcrumbEl = document.getElementById('breadcrumb');
+            let path = `<span class="text-muted-foreground">${APP_ID}</span> <span class="mx-1">/</span> <a href="#" class="text-secondary hover:text-primary" onclick="setAppState('dashboard')">Dashboard</a>`;
+
+            if (currentJob) {
+                path += `<span class="mx-1">/</span> <a href="#" class="text-secondary hover:text-primary" onclick="setAppState('applicants', '${currentJob}')">Jobs</a> <span class="mx-1">/</span> <span class="text-secondary">${currentJob}</span>`;
+            }
+
+            let activeJobSection = '';
+            if (currentAppState === 'applicants') {
+                activeJobSection = 'Applicants';
+            } else if (currentAppState === 'applicationPagesList' || currentAppState.startsWith('createPublication')) {
+                activeJobSection = 'Application Pages';
+            }
+            
+            if (activeJobSection) {
+                if (currentAppState.startsWith('createPublication')) {
+                    path += `<span class="mx-1">/</span> <a href="#" class="text-secondary hover:text-primary" onclick="setAppState('applicationPagesList', '${currentJob}')">Application Pages</a> <span class="mx-1">/</span> <span class="text-primary font-medium">New Application Page</span>`;
+                } else {
+                    path += `<span class="mx-1">/</span> <span class="text-secondary">${activeJobSection}</span>`;
+                }
+            }
+
+            breadcrumbEl.innerHTML = path;
+        }
+
+        function renderDashboard() {
+            // UPDATED: Reduced job list to only 2 specific jobs
+            const jobs = [
+                { title: 'Software Engineer', applicants: 5, activity: 'Active publication channels', type: 'Job Position', ref: 'Ref J_SE12' },
+                { title: 'Sales Manager - EMEA', applicants: 2, activity: 'Active publication channels', type: 'Job Position', ref: 'Ref J_SM05' },
+            ];
+            
+            // Set currentJob to the first item for consistent navigation if not set
+            currentJob = jobs[0].title; 
+
+            const activeJobsTab = (state) => `
+                <button class="px-4 py-2 text-sm font-medium ${state === 'active' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}" onclick="this.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('border-primary', 'text-primary')); this.classList.add('border-primary', 'text-primary');">Active jobs</button>
+            `;
+
+            return `
+                <h1 class="text-2xl mb-6">Dashboard</h1>
+                
+                <div class="bg-card rounded-lg-custom overflow-hidden border border-border shadow-sm">
+                    <!-- Tabs -->
+                    <div class="flex items-center space-x-4 px-6 border-b border-border">
+                        ${activeJobsTab('active')}
+                        ${activeJobsTab('archived')}
+                        ${activeJobsTab('spontaneous')}
+                        ${activeJobsTab('sourcing')}
+                    </div>
+
+                    <!-- Search and Options -->
+                    <div class="flex items-center justify-between p-4 border-b border-border">
+                        <div class="flex w-full max-w-lg items-center border border-border rounded-base bg-card">
+                            <i class="fa-solid fa-search text-muted-foreground px-3"></i>
+                            <input type="text" placeholder="Search" class="flex-grow border-none focus:ring-0 p-2 bg-transparent text-sm">
+                            <button class="bg-primary text-primary-foreground text-sm px-4 h-full rounded-r-base">Search</button>
+                        </div>
+                        <div class="text-sm text-secondary cursor-pointer">
+                            <i class="fa-solid fa-ellipsis-v mr-2"></i>Show Options
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 text-left text-xs text-muted-foreground uppercase border-b border-border">
+                                    <th class="p-3 font-medium">Job title</th>
+                                    <th class="p-3 font-medium text-right">Applicants</th>
+                                    <th class="p-3 font-medium">Activity</th>
+                                    <th class="p-3 font-medium">Job type</th>
+                                    <th class="p-3 font-medium text-right"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${jobs.map(job => `
+                                    <tr class="table-row-hover border-b border-border last:border-b-0">
+                                        <td class="p-3 py-3.5 font-medium">
+                                            <a href="#" onclick="setAppState('applicants', '${job.title}')" class="text-secondary hover:text-primary">
+                                                ${job.title}
+                                            </a>
+                                            <div class="text-xs text-muted-foreground">${job.ref}</div>
+                                        </td>
+                                        <td class="p-3 py-3.5 text-right text-primary">${job.applicants} Applicants</td>
+                                        <td class="p-3 py-3.5 flex items-center">
+                                            <div class="w-2 h-2 rounded-full mr-2" style="background-color: ${job.activity.startsWith('Active') ? 'var(--accent)' : 'var(--muted-foreground)'};"></div>
+                                            ${job.activity}
+                                        </td>
+                                        <td class="p-3 py-3.5">${job.type}</td>
+                                        <td class="p-3 py-3.5 text-right text-muted-foreground">
+                                            <i class="fa-solid fa-ellipsis-v cursor-pointer hover:text-secondary"></i>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="p-4 text-center">
+                        <a href="#" class="text-primary font-medium hover:underline">
+                            <i class="fa-solid fa-plus mr-2"></i> New job
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderApplicants() {
+            // UPDATED: Mock data reduced to 2 applicants
+            const applicants = [
+                { first: 'António', last: 'Gomes', channel: 'In App Sourcing', status: 'none', applied: '15/07/2025' },
+                { first: 'Rui', last: 'Freitas', channel: 'Company-Joao', status: 'none', applied: '22/05/2025' },
+            ];
+
+            const tab = (name, count, isActive) => `
+                <button class="px-4 py-2 text-sm font-medium ${isActive ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}">
+                    ${name} (${count})
+                </button>
+            `;
+
+            return `
+                <!-- Job Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h1 class="text-2xl">${currentJob}</h1>
+                </div>
+
+                <!-- Job Sub-Navigation -->
+                <div class="flex space-x-6 border-b border-border mb-6">
+                    <button class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary">Applicants</button>
+                    <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Overview</button>
+                    <!-- Clicks the tab to go to Application Pages List -->
+                    <button class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary" onclick="setAppState('applicationPagesList')">Application Pages</button>
+                    <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Publication Channels</button>
+                    <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Activity Records</button>
+                </div>
+
+                <!-- Applicants Content Card -->
+                <div class="bg-card rounded-lg-custom overflow-hidden border border-border shadow-sm">
+                    <!-- Applicant Filter Tabs -->
+                    <div class="flex items-center space-x-6 px-6 border-b border-border">
+                        ${tab('New', applicants.length, true)}
+                        ${tab('Qualified', 0, false)}
+                        ${tab('Disqualified', 0, false)}
+                        ${tab('Rejected', 0, false)}
+                    </div>
+                    
+                    <!-- Search and Options -->
+                    <div class="flex items-center justify-between p-4 border-b border-border">
+                        <div class="flex w-full max-w-lg items-center border border-border rounded-base bg-card">
+                            <i class="fa-solid fa-search text-muted-foreground px-3"></i>
+                            <input type="text" placeholder="Search" class="flex-grow border-none focus:ring-0 p-2 bg-transparent text-sm">
+                            <div class="text-sm px-4 h-full text-muted-foreground flex items-center space-x-3">
+                                <i class="fa-solid fa-sliders-h cursor-pointer hover:text-secondary"></i>
+                                <i class="fa-solid fa-download cursor-pointer hover:text-secondary"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4 text-sm text-secondary cursor-pointer">
+                            <i class="fa-solid fa-sync-alt mr-2 hover:text-primary"></i>
+                            <i class="fa-solid fa-cog mr-2 hover:text-primary"></i>
+                            <button class="btn-primary text-sm px-3 py-1">Bulk Actions</button>
+                        </div>
+                    </div>
+
+                    <!-- Applicants Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 text-left text-xs text-muted-foreground uppercase border-b border-border">
+                                    <th class="p-3 font-medium"></th> <!-- Placeholder for Avatar/Icon -->
+                                    <th class="p-3 font-medium">First name</th>
+                                    <th class="p-3 font-medium">Last name</th>
+                                    <th class="p-3 font-medium">Publication Channel</th>
+                                    <th class="p-3 font-medium">Status</th>
+                                    <th class="p-3 font-medium">Applied</th>
+                                    <th class="p-3 font-medium">Stars</th>
+                                    <th class="p-3 font-medium">Steps</th>
+                                    <th class="p-3 font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${applicants.map(app => `
+                                    <tr class="table-row-hover border-b border-border last:border-b-0">
+                                        <td class="p-3 py-3.5"><i class="fa-solid fa-caret-right text-primary"></i></td>
+                                        <td class="p-3 py-3.5 font-medium text-primary">${app.first}</td>
+                                        <td class="p-3 py-3.5">${app.last}</td>
+                                        <td class="p-3 py-3.5 text-sm text-primary">${app.channel}</td>
+                                        <td class="p-3 py-3.5"><select class="border-none p-0 text-sm"><option>${app.status}</option></select></td>
+                                        <td class="p-3 py-3.5 text-muted-foreground text-sm">${app.applied}</td>
+                                        <td class="p-3 py-3.5 text-amber-500 text-sm"><i class="fa-solid fa-star"></i> -</td>
+                                        <td class="p-3 py-3.5 text-sm">-</td>
+                                        <td class="p-3 py-3.5 text-muted-foreground text-lg space-x-2">
+                                            <i class="fa-solid fa-envelope cursor-pointer hover:text-secondary"></i>
+                                            <i class="fa-solid fa-file-alt cursor-pointer hover:text-secondary"></i>
+                                            <i class="fa-solid fa-ellipsis-v cursor-pointer hover:text-secondary"></i>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderApplicationPagesList() {
+            // UPDATED: Mock data reduced to 2 publications
+            const activePages = [
+                { name: 'Senior Frontend Engineer (Draft)', languages: 'EN | DE', created: '03/10/2025', applicants: 0, channels: 0, color: 'red-500' },
+                { name: 'Sales Manager - EMEA', languages: 'EN | FR | ES', created: '01/10/2025', applicants: 2, channels: 1, color: 'blue-500' },
+            ];
+            
+            // Archived list remains empty as previously requested
+            const archivedPages = [];
+            
+            const jobNav = (
+                    `<div class="flex space-x-6 border-b border-border mb-6">
+                        <button class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary" onclick="setAppState('applicants')">Applicants</button>
+                        <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Overview</button>
+                        <button class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary">Application Pages</button>
+                        <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Publication Channels</button>
+                        <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Activity Records</button>
+                    </div>`
+                );
+
+            return `
+                <!-- Job Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h1 class="text-2xl">${currentJob}</h1>
+                </div>
+
+                <!-- Job Sub-Navigation -->
+                ${jobNav}
+
+                <!-- Content Card -->
+                <div class="bg-card rounded-lg-custom overflow-hidden border border-border shadow-sm">
+                    <!-- Search and Add Button -->
+                    <div class="flex items-center justify-between p-4 border-b border-border">
+                        <div class="flex w-full max-w-lg items-center border border-border rounded-base bg-card">
+                            <i class="fa-solid fa-search text-muted-foreground px-3"></i>
+                            <input type="text" placeholder="Search" class="flex-grow border-none focus:ring-0 p-2 bg-transparent text-sm">
+                            <button class="bg-primary text-primary-foreground text-sm px-4 h-full rounded-r-base">Search</button>
+                        </div>
+                    </div>
+
+                    <!-- Active Table -->
+                    <div class="p-4">
+                        <h3 class="text-lg text-secondary font-bold mb-3">Active</h3>
+                        <div class="overflow-x-auto border border-border rounded-lg-custom">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-left text-xs text-muted-foreground uppercase border-b border-border">
+                                        <th class="p-3 font-medium">Name</th>
+                                        <th class="p-3 font-medium">Languages</th>
+                                        <th class="p-3 font-medium">Creation date</th>
+                                        <th class="p-3 font-medium">Applicants</th>
+                                        <th class="p-3 font-medium">Publication Channels</th>
+                                        <th class="p-3 font-medium">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${activePages.map(page => `
+                                        <tr class="table-row-hover border-b border-border last:border-b-0">
+                                            <td class="p-3 py-3.5 font-medium flex items-center space-x-2">
+                                                <div class="w-2 h-2 rounded-full" style="background-color: ${page.color};"></div>
+                                                <a href="#" class="text-secondary hover:text-primary">${page.name}</a>
+                                            </td>
+                                            <td class="p-3 py-3.5 text-sm text-muted-foreground">${page.languages.split(' | ').join(', ')}</td>
+                                            <td class="p-3 py-3.5 text-sm">${page.created}</td>
+                                            <td class="p-3 py-3.5 text-sm text-primary">${page.applicants} Applicants</td>
+                                            <td class="p-3 py-3.5 text-sm">${page.channels} Publication Channel${page.channels !== 1 ? 's' : ''}</td>
+                                            <td class="p-3 py-3.5 text-sm text-primary space-x-4">
+                                                <a href="#" class="hover:underline"><i class="fa-solid fa-share-alt mr-1"></i> Share</a>
+                                                <i class="fa-solid fa-ellipsis-v cursor-pointer hover:text-secondary text-muted-foreground"></i>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 text-center">
+                            <!-- Link to Creation Step 1 -->
+                            <a href="#" onclick="setAppState('createPublicationStep1')" class="text-primary font-medium hover:underline text-base">
+                                <i class="fa-solid fa-plus mr-1"></i> Add new Application Page
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Archived Table (Renders only if archivedPages has content) -->
+                    ${archivedPages.length > 0 ? `
+                    <div class="p-4 border-t border-border">
+                        <h3 class="text-lg text-secondary font-bold mb-3">Archived</h3>
+                        <div class="overflow-x-auto border border-border rounded-lg-custom">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-left text-xs text-muted-foreground uppercase border-b border-border">
+                                        <th class="p-3 font-medium">Name</th>
+                                        <th class="p-3 font-medium">Creation date</th>
+                                        <th class="p-3 font-medium">Archiving date</th>
+                                        <th class="p-3 font-medium">Applicants</th>
+                                        <th class="p-3 font-medium">Publication Channels</th>
+                                        <th class="p-3 font-medium">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${archivedPages.map(page => `
+                                        <tr class="table-row-hover border-b border-border last:border-b-0">
+                                            <td class="p-3 py-3.5 font-medium flex items-center space-x-2">
+                                                <div class="w-2 h-2 rounded-full" style="background-color: ${page.color};"></div>
+                                                <a href="#" class="text-secondary hover:text-primary">${page.name}</a>
+                                            </td>
+                                            <td class="p-3 py-3.5 text-sm">${page.created}</td>
+                                            <td class="p-3 py-3.5 text-sm">${page.archived}</td>
+                                            <td class="p-3 py-3.5 text-sm text-primary">${page.applicants} Applicants</td>
+                                            <td class="p-3 py-3.5 text-sm">${page.channels} Publication Channel${page.channels !== 1 ? 's' : ''}</td>
+                                            <td class="p-3 py-3.5 text-sm text-muted-foreground">
+                                                <i class="fa-solid fa-ellipsis-v cursor-pointer hover:text-secondary"></i>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="p-4 border-t border-border text-center text-muted-foreground text-sm">
+                        No archived application pages found.
+                    </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // Stepper Helper Function (UX Improvement)
+        function renderStepper(currentStep) {
+            const steps = [
+                { id: 1, name: 'Template' },
+                { id: 2, name: 'Configure' },
+                { id: 3, name: 'Details' }
+            ];
+
+            return `
+                <div class="flex justify-between items-center w-full max-w-2xl mx-auto mb-8">
+                    ${steps.map(step => `
+                        <div class="flex items-center flex-1 ${step.id <= currentStep ? 'text-primary' : 'text-muted-foreground'}">
+                            <!-- Step Circle -->
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 stepper-circle
+                                ${step.id === currentStep ? 'border-primary bg-primary text-primary-foreground shadow' : 
+                                  (step.id < currentStep ? 'border-primary bg-primary text-primary-foreground' : 'border-muted text-muted-foreground')} 
+                                text-sm font-medium mr-2">
+                                ${step.id}
+                            </div>
+                            <span class="text-sm font-medium hidden sm:inline">${step.name}</span>
+                            <!-- Line Connector -->
+                            ${step.id < steps.length ? `<div class="flex-1 h-0.5 mx-2 stepper-line ${step.id <= currentStep ? 'bg-primary' : 'bg-muted'}"></div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+
+        // --- Creation Wizard Steps ---
+
+        function renderCreationStep1() {
+            return `
+                <div class="bg-card rounded-lg-custom p-6 border border-border shadow-sm">
+                    <!-- UX FIX: Stepper for system status visibility -->
+                    ${renderStepper(1)}
+
+                    <h2 class="text-xl mb-6">New Application Page</h2>
+                    
+                    <p class="text-base text-muted-foreground mb-8">Choose one of the options</p>
+                    
+                    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 mb-10">
+                        <!-- Primary Action -->
+                        <button onclick="setPublicationStep(2)" class="btn-primary flex-1 p-4 text-base shadow-sm">
+                            Create new application page
+                        </button>
+                        <!-- Secondary Action using outline style for better visual hierarchy -->
+                        <button onclick="alert('Template Selection is not yet implemented.')" class="btn-secondary-outline flex-1 p-4 text-base shadow-sm">
+                            Use other application page as template
+                        </button>
+                    </div>
+
+                    <div class="border-t border-border pt-4 flex justify-start">
+                        <button class="btn-default" onclick="setAppState('applicationPagesList')">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCreationStep2() {
+            return `
+                <div class="bg-card rounded-lg-custom p-6 border border-border shadow-sm">
+                    <!-- UX FIX: Stepper for system status visibility -->
+                    ${renderStepper(2)}
+
+                    <h2 class="text-xl mb-6">Configuration</h2>
+                    
+                    <div class="w-full max-w-xl space-y-8">
+                        <!-- Job Title/Name Placeholder -->
+                        <div class="space-y-2">
+                            <label class="text-sm-medium text-secondary">Application Page Name</label>
+                            <div class="p-3 border border-border rounded-base bg-gray-50 font-medium text-secondary">
+                                ${currentJob} (03/10/2025)
+                            </div>
+                        </div>
+
+                        <!-- Languages Select -->
+                        <div class="space-y-2">
+                            <label for="languages" class="text-sm-medium text-secondary">Languages</label>
+                            <!-- Step 2 Aesthetic Fix: Used lighter, primary-colored chips -->
+                            <div id="languages" class="flex items-center border border-border rounded-base p-1.5 bg-card">
+                                <div class="lang-chip text-xs font-medium px-2 py-1 rounded-base flex items-center space-x-1 mr-2">
+                                    English <i class="fa-solid fa-times text-xs cursor-pointer ml-1"></i>
+                                </div>
+                                <div class="lang-chip text-xs font-medium px-2 py-1 rounded-base flex items-center space-x-1 mr-2">
+                                    French <i class="fa-solid fa-times text-xs cursor-pointer ml-1"></i>
+                                </div>
+                                <!-- Dropdown icon to add more languages -->
+                                <i class="fa-solid fa-caret-down text-muted-foreground text-sm cursor-pointer ml-auto mr-1"></i>
+                            </div>
+                            <p class="text-sm text-muted-foreground mt-2">
+                                Please select which language(s) you want the application page to be in. The page will automatically be multi-language if you select more than one language. In this case you are required to fill in some fields in every language you selected.
+                            </p>
+                            <p class="text-sm text-red-500 flex items-center mt-2">
+                                <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+                                Please note that once you have selected the language(s) you will not be able to edit them.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-border pt-4 flex justify-between mt-12">
+                        <button class="btn-default" onclick="setPublicationStep(1)">
+                            <i class="fa-solid fa-chevron-left mr-2"></i> Previous
+                        </button>
+                        <button class="btn-primary" onclick="setPublicationStep(3)">Next <i class="fa-solid fa-chevron-right ml-2"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // --- MODAL RENDERER ---
+        function renderSmartPopulateModal() {
+            if (!showSmartPopulateModal) {
+                document.getElementById('modal-container').innerHTML = '';
+                return;
+            }
+
+            const modalHtml = `
+                <div class="modal-backdrop">
+                    <div class="modal-content">
+                        <!-- Header -->
+                        <div class="p-6 border-b border-border flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-secondary flex items-center">
+                                <i class="fa-solid fa-magic-wand-sparkles mr-3 text-primary"></i> Smart Populate Form
+                            </h3>
+                            <button class="text-muted-foreground hover:text-secondary" onclick="toggleSmartPopulateModal(false)">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-6 space-y-6">
+                            <p class="text-sm text-muted-foreground">
+                                Use the job title and an optional document (e.g., job spec or interview transcript) to automatically fill required fields in the form.
+                            </p>
+                            
+                            <!-- Job Title Input (Read Only) -->
+                            <div class="space-y-1">
+                                <label class="text-sm-label text-secondary block">Current Job Title</label>
+                                <input type="text" id="modalJobTitleInput" value="${currentJob || 'No Job Selected'}" readonly class="bg-gray-50 cursor-default">
+                            </div>
+
+                            <!-- Document Upload -->
+                            <div class="space-y-1">
+                                <label class="text-sm-label text-secondary block">Upload Source Document (Optional)</label>
+                                <div class="flex items-center space-x-3">
+                                    <label for="aiDocumentUploadModal" class="btn-secondary-outline text-sm px-3 py-1.5 cursor-pointer flex items-center">
+                                        <i class="fa-solid fa-cloud-upload-alt mr-2"></i> Choose File (.txt, .pdf)
+                                    </label>
+                                    <input type="file" id="aiDocumentUploadModal" accept=".txt,.rtf,.pdf" class="hidden" onchange="document.getElementById('modalFileStatus').textContent = this.files.length > 0 ? this.files[0].name : 'No file selected';">
+                                    <span id="modalFileStatus" class="text-sm text-muted-foreground">No file selected</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-4 border-t border-border flex justify-end space-x-3">
+                            <button id="modalCancelButton" class="btn-default" onclick="toggleSmartPopulateModal(false)">Cancel</button>
+                            <button id="modalRunAIButton" class="btn-primary" onclick="smartPopulateForm()">
+                                Run AI Generation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modal-container').innerHTML = modalHtml;
+        }
+
+        function toggleSmartPopulateModal(visible) {
+            showSmartPopulateModal = visible;
+            renderSmartPopulateModal(); // Explicitly call the rendering function
+        }
+
+
+        function renderCreationStep3() {
+            // Languages determined in Step 2 (simulated)
+            const languages = ['English', 'French'];
+            
+            // Function to render a standard input group
+            const renderInput = (label, required = false, type = 'text', id = '', placeholder = '', value = '', disabled = false) => `
+                <div class="w-full">
+                    <label class="text-sm-label text-secondary mb-1 block">${label}${required ? '<span class="text-red-500 ml-1">*</span>' : ''}</label>
+                    <input type="${type}" id="${id}" placeholder="${placeholder}" value="${value}" ${disabled ? 'disabled' : ''} class="text-base ${disabled ? 'bg-gray-50 cursor-default' : ''}">
+                </div>
+            `;
+
+            // Function to render a select/dropdown group
+            const renderSelect = (label, required = false, id = '', disabled = false) => `
+                <div class="w-full">
+                    <label class="text-sm-label text-secondary mb-1 block">${label}${required ? '<span class="text-red-500 ml-1">*</span>' : ''}</label>
+                    <select id="${id}" ${disabled ? 'disabled' : ''} class="text-base text-muted-foreground ${disabled ? 'bg-gray-50 cursor-default' : ''}">
+                        <option value="">Select an option</option>
+                        <!-- Options needed for AI population -->
+                        <option value="Software Development">Software Development</option>
+                        <option value="Marketing and Sales">Marketing and Sales</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Fixed-term">Fixed-term</option>
+                        <!-- Placeholder options -->
+                        <option value="Step 1">Step 1</option>
+                        <option value="Media 1">Media 1</option>
+                        <option value="Country X">Country X</option>
+                        <option value="Interval Y">Interval Y</option>
+                        <option value="Region Z">Region Z</option>
+                    </select>
+                </div>
+            `;
+
+            const renderLanguageTabs = () => `
+                <div class="flex border-b border-border space-x-6 mb-6">
+                    ${languages.map(lang => `
+                        <button onclick="setActiveLanguage('${lang}')" class="pb-2 px-1 text-sm lang-tab 
+                            ${lang === activeLanguage ? 'lang-tab-active' : 'lang-tab-inactive'}">
+                            ${lang}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+
+            const renderDescriptionSection = () => `
+                <div class="w-full mb-8">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-sm-label text-secondary block">Description (${activeLanguage})</label>
+                        ${activeLanguage !== languages[0] ? 
+                            `<button class="btn-default text-sm px-3 py-1" onclick="alert('AI Translation from ${languages[0]} to ${activeLanguage} is running!')">
+                                <i class="fa-solid fa-language mr-1"></i> AI Translate
+                            </button>` 
+                            : '<span class="text-xs text-muted-foreground">Original Content</span>'}
+                    </div>
+                    
+                    <!-- Rich Text Editor (RTE) Placeholder -->
+                    <div class="border border-border rounded-base overflow-hidden">
+                        <div class="bg-gray-50 p-2 flex space-x-2 text-muted-foreground text-sm">
+                            <i class="fa-solid fa-bold cursor-pointer hover:text-secondary"></i>
+                            <i class="fa-solid fa-italic cursor-pointer hover:text-secondary"></i>
+                            <i class="fa-solid fa-list-ul cursor-pointer hover:text-secondary"></i>
+                            <i class="fa-solid fa-link cursor-pointer hover:text-secondary"></i>
+                            <!-- ... more icons ... -->
+                        </div>
+                        <textarea id="jobDescriptionTextarea" rows="8" class="border-none focus:ring-0 p-4 w-full text-base" 
+                            placeholder="Enter the job description for ${activeLanguage} here.">${jobDescriptions[activeLanguage] || ''}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            // Helper for rendering a collapsible section
+            const renderCollapsibleSection = (id, title, contentHtml, open = false) => `
+                <div class="border border-border rounded-lg-custom mb-6">
+                    <!-- Header -->
+                    <div id="${id}Header" class="accordion-header p-4 flex justify-between items-center bg-gray-50/50" onclick="toggleAccordion('${id}')">
+                        <h3 class="text-lg text-secondary font-bold flex items-center">
+                            <i id="${id}Icon" class="fa-solid ${open ? 'fa-chevron-down' : 'fa-chevron-right'} mr-3 text-primary text-sm transition-transform"></i> 
+                            ${title}
+                        </h3>
+                        <span class="text-sm text-muted-foreground">Mandatory fields completed: 3/5</span>
+                    </div>
+                    <!-- Content -->
+                    <div id="${id}Content" class="accordion-content ${open ? 'expanded' : ''} p-4">
+                        ${contentHtml}
+                    </div>
+                </div>
+            `;
+
+            // Mock Data for Auto-filled Address
+            const prefilledAddress = {
+                country: 'Portugal',
+                zip: '3720-394',
+                city: 'Oliveira de Azeméis',
+                street: 'Rua do Progresso',
+                number: '42',
+                location: 'Lisbon (HQ)',
+            };
+
+
+            return `
+                <div class="bg-card rounded-lg-custom p-6 border border-border shadow-sm">
+                    <!-- UX FIX: Stepper for system status visibility -->
+                    ${renderStepper(3)}
+
+                    <!-- Information Header -->
+                    <h2 class="text-xl mb-6">New Application Page</h2>
+                    
+                    <!-- --- AI SMART POPULATE BUTTON --- -->
+                    <div class="mb-6 flex justify-end">
+                        <button onclick="toggleSmartPopulateModal(true)" class="btn-primary text-sm px-4 py-2 flex items-center shadow-sm">
+                            <i class="fa-solid fa-magic-wand-sparkles mr-2"></i> Smart Populate Form
+                        </button>
+                    </div>
+                    <!-- --------------------------------------- -->
+
+                    <!-- Section 1: Basic Information (Simplified) -->
+                    ${renderCollapsibleSection('info', 'Basic Information', `
+                        <div class="grid grid-cols-1 gap-6 mb-8">
+                            ${renderInput('Title', true, 'text', 'jobTitleInput', 'e.g. Senior Frontend Developer')}
+                        </div>
+                    `, true)}
+                    
+                    <!-- Section 2: Presence Options / Description (Simplified) -->
+                    ${renderCollapsibleSection('presence', 'Job Description & Presence', `
+                        ${renderLanguageTabs()}
+                        ${renderDescriptionSection()}
+                    `, true)}
+
+                    <!-- Section 3: Address (AUTOMATED - Simplified) -->
+                    ${renderCollapsibleSection('address', 'Location & Address (Automated)', `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <!-- Country: Manual render to show pre-filled and disabled -->
+                            <div class="w-full">
+                                <label class="text-sm-label text-secondary mb-1 block">Country<span class="text-red-500 ml-1">*</span></label>
+                                <select id="countrySelect" disabled class="text-base text-muted-foreground bg-gray-50 cursor-default">
+                                    <option value="">Select an option</option>
+                                    <option value="Country X" selected>${prefilledAddress.country}</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Remaining Address Fields: Pre-filled and disabled -->
+                            ${renderInput('Postal code/Zip', false, 'text', 'zipCodeInput', prefilledAddress.zip, true)}
+                            ${renderInput('City', false, 'text', 'cityInput', prefilledAddress.city, true)}
+                            ${renderInput('Street address', false, 'text', 'streetAddressInput', prefilledAddress.street, true)}
+                            ${renderInput('Street number', false, 'number', 'streetNumberInput', prefilledAddress.number, true)}
+                            ${renderInput('Location', false, 'text', 'locationInput', prefilledAddress.location, true)}
+                        </div>
+                        <div class="text-sm text-primary font-medium mt-2">
+                            *This section is pre-populated from your company location data.
+                        </div>
+                    `, true)}
+                    
+                    <!-- Section 4: Job Content -->
+                    ${renderCollapsibleSection('content', 'Contract & Team Details', `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            ${renderSelect('Employment Type', true, 'employmentTypeSelect')}
+                            ${renderSelect('Contract Type', true, 'contractTypeSelect')}
+                            ${renderSelect('Current Team', true, 'currentTeamSelect')}
+                            ${renderSelect('Hours per week', true, 'hoursPerWeekSelect')}
+                            ${renderSelect('Contract Duration', false, 'contractDurationSelect')}
+                            ${renderSelect('Current period', false, 'currentPeriodSelect')}
+                        </div>
+                        <h3 class="text-lg text-secondary font-bold mb-4">Work arrangement</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            ${renderSelect('Subscription Type', true, 'subscriptionTypeSelect')}
+                            ${renderSelect('Is remote', false, 'isRemoteSelect')}
+                        </div>
+                    `, true)}
+
+                    <!-- Section 5: Salary & Categorization (Simplified) -->
+                    ${renderCollapsibleSection('salary', 'Salary & Categorization', `
+                        <h3 class="text-lg text-secondary font-bold mb-4">Salary Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            ${renderInput('From', false, 'number', 'salaryFromInput')}
+                            ${renderInput('To', false, 'number', 'salaryToInput')}
+                            ${renderSelect('Salary Interval', false, 'salaryIntervalSelect')}
+                        </div>
+
+                        <h3 class="text-lg text-secondary font-bold mb-4">Job Categorization</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            ${renderSelect('Job Category', true, 'jobCategorySelect')} 
+                        </div>
+                    `, true)}
+
+                    <!-- Libraries Section (kept separate as it's typically metadata) -->
+                    <h3 class="text-lg text-secondary font-bold mb-4 mt-8">Libraries</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 border border-border p-4 rounded-lg-custom shadow-sm">
+                        ${renderSelect('Employment Type', false, 'libEmploymentTypeSelect')}
+                        ${renderSelect('Contract Type', false, 'libContractTypeSelect')}
+                        ${renderSelect('Team', false, 'libTeamSelect')}
+                    </div>
+
+                    <!-- Footer Navigation -->
+                    <div class="border-t border-border pt-4 flex justify-between mt-8">
+                        <button class="btn-default" onclick="setPublicationStep(2)">
+                            <i class="fa-solid fa-chevron-left mr-2"></i> Previous
+                        </button>
+                        <div class="flex space-x-3">
+                            <button class="btn-default">Save</button>
+                            <button class="btn-primary" onclick="alert('Completing the Publication Flow. Returning to Application Pages List.')">
+                                Next <i class="fa-solid fa-chevron-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // --- Guide Text Formatting Helper (FIX) ---
+        function formatGuideText(text) {
+            // Replaces **text** with <b class="font-bold">text</b> for correct rendering
+            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b class="font-bold text-secondary">$1</b>');
+            // Replaces *text* with <i>text</i> (though not currently used, good practice)
+            formattedText = formattedText.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            return formattedText;
+        }
+
+        // --- Guided Tour Renderer ---
+
+        function renderGuidedTour() {
+            const tourContainer = document.getElementById('guided-tour-container');
+            const fabIcon = document.getElementById('fab-icon');
+
+            // FIX: Added 'dashboard' to the array so the FAB is visible on the starting page.
+            const showFab = ['dashboard', 'applicants', 'applicationPagesList', 'createPublicationStep1', 'createPublicationStep2', 'createPublicationStep3'].includes(currentAppState);
+            
+            if (!showFab) {
+                tourContainer.innerHTML = '';
+                return;
+            }
+
+            // Update FAB icon state
+            if (showTourGuide) {
+                fabIcon.classList.remove('fa-route');
+                fabIcon.classList.add('fa-times');
+            } else {
+                fabIcon.classList.remove('fa-times');
+                fabIcon.classList.add('fa-route');
+                tourContainer.innerHTML = '';
+                return;
+            }
+
+            // --- Tour Content Logic ---
+            let tourTitle = "Quick Start Guide";
+            let tourContent = "";
+
+            if (currentAppState === 'dashboard') {
+                tourContent = `
+                    <p class="text-sm mb-3">Welcome! To begin the job publication process, you must first enter a job.</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The job title **"Software Engineer"** (or **"Sales Manager - EMEA"**).')}</li>
+                    </ol>
+                `;
+            }
+            else if (currentAppState === 'applicants') {
+                tourContent = `
+                    <p class="text-sm mb-3">You are now in the job view. To set up the candidate application page, follow this path:</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The sub-navigation tab titled **"Application Pages"**.')}</li>
+                    </ol>
+                `;
+            } else if (currentAppState === 'applicationPagesList') {
+                tourContent = `
+                    <p class="text-sm mb-3">You are viewing all active publications. Let's create a new one.</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The link: **"Add new Application Page"** at the bottom of the table.')}</li>
+                    </ol>
+                `;
+            } else if (currentAppState === 'createPublicationStep1') {
+                tourContent = `
+                    <p class="text-sm mb-3">Step 1: Choose your starting point.</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The main blue button: **"Create new application page"**.')}</li>
+                        <li>${formatGuideText('Then: Click **"Next"** at the bottom right.')}</li>
+                    </ol>
+                `;
+            } else if (currentAppState === 'createPublicationStep2') {
+                tourContent = `
+                    <p class="text-sm mb-3">Step 2: Configure the page languages.</p>
+                    <p class="text-xs text-muted-foreground mb-4">Note: We have pre-selected English and French for demonstration.</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The primary blue button: **"Next"** at the bottom right to continue to the main form.')}</li>
+                    </ol>
+                `;
+            } else if (currentAppState === 'createPublicationStep3') {
+                tourTitle = "AI VALUE DEMO (Step 3/3)";
+                tourContent = `
+                    <p class="text-sm mb-3 font-medium text-primary">Demonstrate AI Efficiency!</p>
+                    <ol class="list-decimal list-inside text-sm space-y-2">
+                        <li>${formatGuideText('**Click:** The button: **"Smart Populate Form"** (top right).')}</li>
+                        <li>${formatGuideText('In the modal, click **"Run AI Generation"**.')}</li>
+                        <li>${formatGuideText('**Observe:** The Title, Contract, Category, and Description fields fill automatically.')}</li>
+                        <li>${formatGuideText('**Complete:** Click **"Next"** at the bottom right.')}</li>
+                    </ol>
+                `;
+            } 
+
+
+            tourContainer.innerHTML = `
+                <div class="guided-tour">
+                    <div class="p-4 border-b border-border bg-gray-50/50">
+                        <h4 class="font-bold text-secondary text-base">${tourTitle}</h4>
+                    </div>
+                    <div class="p-4">
+                        ${tourContent}
+                        <button class="btn-default text-sm mt-3 w-full" onclick="toggleTourGuide()">Close Guide</button>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // --- Main Render Dispatcher ---
+        function render() {
+            const appContentEl = document.getElementById('app-content');
+            
+            // Render breadcrumb first
+            renderBreadcrumb();
+
+            // Render main content based on state
+            switch (currentAppState) {
+                case 'dashboard':
+                    appContentEl.innerHTML = renderDashboard();
+                    break;
+                case 'applicants':
+                    appContentEl.innerHTML = renderApplicants();
+                    break;
+                case 'applicationPagesList':
+                    appContentEl.innerHTML = renderApplicationPagesList();
+                    break;
+                case 'createPublicationStep1':
+                    appContentEl.innerHTML = renderCreationStep1();
+                    break;
+                case 'createPublicationStep2':
+                    appContentEl.innerHTML = renderCreationStep2();
+                    break;
+                case 'createPublicationStep3':
+                    appContentEl.innerHTML = renderCreationStep3();
+                    break;
+                default:
+                    setAppState('dashboard'); // Fallback
+                    break;
+            }
+            
+            // Renders the modal and guide only when requested
+            renderSmartPopulateModal(); 
+            // NOTE: renderGuidedTour is now also called explicitly in setAppState/setPublicationStep to ensure timing is correct
+            // Leaving this here for the initial page load, but relying on state setters for subsequent updates.
+            if (currentAppState === 'dashboard') {
+                renderGuidedTour();
+            }
+        }
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            render();
+        });
+    </script>
+</body>
+</html>
