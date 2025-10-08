@@ -9,11 +9,11 @@
     <!-- Rationale: Lucide icons are used for clear, professional iconography. They are loaded as a single script for simplicity. -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Rationale: The design library specifies GT Walsheim as the primary font. It is imported here to ensure brand consistency. */
+        /* Rationale: The design library specifies GT Walsheim as the primary font. It is imported here to ensure brand consistency. -->
         @import url('https://fonts.cdnfonts.com/css/gt-walsheim');
         body { 
             font-family: 'GT Walsheim', sans-serif; 
-            background-color: #F8F9FA;
+            background-color: #F7F8FA; /* A slightly cooler gray for the base background */
             overflow-x: hidden;
         }
         /* Helper class to hide pages not in view */
@@ -29,8 +29,10 @@
         .tooltip {
             position: absolute;
             bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             margin-bottom: 8px;
-            background-color: #1f2937; /* bg-gray-800 */
+            background-color: #111827; /* bg-gray-900 */
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
@@ -39,203 +41,167 @@
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
+            z-index: 10;
         }
         .tooltip-container:hover .tooltip {
             opacity: 1;
         }
+        [data-status="completed"] .task-title { text-decoration: line-through; color: #9ca3af; } /* gray-400 */
     </style>
 </head>
 <body>
     <div id="app-container" class="flex w-full h-screen bg-gray-100">
         
         <!-- === SIDEBAR NAVIGATION === -->
-        <div class="w-14 bg-slate-900 h-screen flex-shrink-0 flex flex-col items-center py-4 space-y-6 text-white/80">
-            <div class="text-white text-2xl font-bold">S</div>
-            <div class="tooltip-container">
-                <button class="p-2 rounded-lg bg-white/20"><i data-lucide="user" class="w-5 h-5"></i></button>
-                <div class="tooltip">Dashboard</div>
-            </div>
-            <div class="tooltip-container">
-                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="search" class="w-5 h-5"></i></button>
-                <div class="tooltip">Search</div>
-            </div>
-            <div class="tooltip-container">
-                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="file-text" class="w-5 h-5"></i></button>
-                <div class="tooltip">Tasks</div>
-            </div>
-            <div class="tooltip-container">
-                 <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="briefcase" class="w-5 h-5"></i></button>
-                 <div class="tooltip">Calendar</div>
-            </div>
-             <div class="tooltip-container">
-                <button class="p-2 rounded-lg hover:bg-white/10"><i data-lucide="users" class="w-5 h-5"></i></button>
-                <div class="tooltip">Reports</div>
-            </div>
+        <div class="w-14 bg-white h-screen flex-shrink-0 flex flex-col items-center py-4 space-y-6 text-gray-500 border-r border-gray-200">
+            <div class="text-gray-900 text-2xl font-bold">S</div>
+            <div class="tooltip-container"><button class="p-2 rounded-lg bg-blue-50 text-blue-600"><i data-lucide="user" class="w-5 h-5"></i></button><div class="tooltip">Dashboard</div></div>
+            <div class="tooltip-container"><button class="p-2 rounded-lg hover:bg-gray-100 hover:text-gray-900"><i data-lucide="search" class="w-5 h-5"></i></button><div class="tooltip">Search</div></div>
+            <div class="tooltip-container"><button class="p-2 rounded-lg hover:bg-gray-100 hover:text-gray-900"><i data-lucide="file-text" class="w-5 h-5"></i></button><div class="tooltip">Tasks</div></div>
+            <div class="tooltip-container"><button class="p-2 rounded-lg hover:bg-gray-100 hover:text-gray-900"><i data-lucide="briefcase" class="w-5 h-5"></i></button><div class="tooltip">Calendar</div></div>
+            <div class="tooltip-container"><button class="p-2 rounded-lg hover:bg-gray-100 hover:text-gray-900"><i data-lucide="users" class="w-5 h-5"></i></button><div class="tooltip">Reports</div></div>
         </div>
 
-        <!-- === MAIN CONTENT AREA === -->
-        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <!-- === MAIN AREA WRAPPER === -->
+        <!-- Correction: The main area is now split into a header and a body wrapper. -->
+        <div class="flex-1 flex flex-col h-full">
             <!-- Header -->
             <div id="header" class="w-full bg-white border-b border-gray-200 p-4 flex justify-between items-center flex-shrink-0">
                  <div>
                     <nav id="breadcrumbs" class="text-sm text-gray-500"></nav>
                     <h2 id="page-title" class="text-xl font-bold text-gray-800 mt-1"></h2>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="tooltip-container">
+                        <button id="toggle-panel-button" class="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full">
+                            <i data-lucide="message-square" class="w-5 h-5"></i>
+                        </button>
+                        <div class="tooltip">Collaboration</div>
+                    </div>
+                    <div class="border-l h-6 border-gray-200 mx-2"></div>
                     <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-5 h-5"></i></button>
                     <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">JS</div>
                 </div>
             </div>
 
-            <!-- Page Content -->
-            <div id="page-content" class="flex-1">
-                <!-- Job Overview Page -->
-                <div id="job-overview-page" class="page-container p-8 space-y-6 bg-gray-50/50"></div>
-                <!-- Candidate List Page -->
-                <div id="candidate-list-page" class="page-container p-8 bg-gray-50/50 page-hidden"></div>
-                <!-- Candidate Profile Page -->
-                <div id="candidate-profile-page" class="page-container p-8 bg-gray-50/50 page-hidden"></div>
-            </div>
-        </main>
-
-        <!-- === GLOBAL ACTION BAR (For both V1 and V2) === -->
-        <div id="action-bar" class="fixed top-1/2 right-4 -translate-y-1/2 p-2 bg-slate-900 border border-slate-700 rounded-full shadow-lg z-50">
-            <div class="flex flex-col gap-2">
-                <div class="tooltip-container">
-                    <button id="toggle-comments-panel-button" class="p-2 text-teal-400 hover:bg-slate-700 rounded-full">
-                        <i data-lucide="message-square" class="w-6 h-6"></i>
-                    </button>
-                    <div class="tooltip">Collaboration</div>
-                </div>
-                <div class="tooltip-container" id="ai-button-container">
-                    <button id="toggle-ai-panel-button" class="p-2 text-purple-400 hover:bg-slate-700 rounded-full">
-                        <i data-lucide="sparkles" class="w-6 h-6"></i>
-                    </button>
-                    <div class="tooltip">AI Agent</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- === COLLABORATION PANEL === -->
-        <div id="collaboration-panel" class="fixed top-0 right-0 h-full w-[400px] bg-slate-900 border-l border-slate-700 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50">
-             <div class="flex flex-col h-full">
-                <!-- Panel Header -->
-                <div class="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
-                    <div>
-                        <h3 id="panel-title" class="font-bold text-white"></h3>
-                        <p id="panel-subtitle" class="text-sm text-gray-400 truncate w-80"></p>
-                    </div>
-                    <button id="close-panel-button" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
+            <!-- Correction: This new wrapper contains the page content and collaboration panel, allowing them to split the screen below the header. -->
+            <div id="main-body-wrapper" class="flex flex-1 overflow-hidden">
+                <!-- Page Content -->
+                <main id="page-content" class="flex-1 bg-gray-50 overflow-y-auto">
+                    <div id="job-overview-page" class="page-container p-8 space-y-6"></div>
+                    <div id="candidate-list-page" class="page-container p-8 page-hidden"></div>
+                    <div id="candidate-profile-page" class="page-container p-8 page-hidden"></div>
+                </main>
                 
-                <!-- Comments View -->
-                <div id="comments-view" class="flex flex-col h-full">
-                    <!-- Panel Tabs -->
-                    <div class="p-2 border-b border-slate-700 flex gap-2 flex-shrink-0">
-                        <button id="team-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white">
-                            <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>Team Comments
-                        </button>
-                        <button id="private-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800">
-                            <i data-lucide="lock" class="w-4 h-4 inline mr-2"></i>My Private Notes
-                        </button>
-                    </div>
-                    <!-- Content Area -->
-                    <div id="panel-content" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-                    <!-- Input Area -->
-                    <div class="p-4 border-t border-slate-700 bg-slate-800 relative flex-shrink-0">
-                        <div id="mentions-popup" class="absolute bottom-full left-4 right-4 mb-2 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-40 overflow-y-auto hidden"></div>
-                        <div class="relative">
-                            <textarea id="comment-input" placeholder="Add a comment... type '@' to mention" class="w-full border border-slate-600 bg-slate-700 text-white rounded-lg p-2 pr-20 resize-none focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-400" rows="3"></textarea>
-                            <div class="absolute right-2 top-2 flex flex-col gap-2">
-                                <button id="post-button" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button>
-                                <button id="attach-button" class="text-gray-400 p-2 rounded-md hover:bg-slate-600"><i data-lucide="paperclip" class="w-4 h-4"></i></button>
+                <!-- === COLLABORATION PANEL === -->
+                <div id="collaboration-panel" class="w-[340px] xl:w-[400px] bg-white border-l border-gray-200 flex-shrink-0 flex flex-col h-full hidden">
+                     <div class="flex flex-col h-full">
+                        <!-- Panel Header -->
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                            <div>
+                                <h3 id="panel-title" class="font-bold text-gray-900">Collaboration</h3>
+                                <p id="panel-subtitle" class="text-sm text-gray-500 truncate w-full"></p>
+                            </div>
+                            <button id="close-panel-button" class="text-gray-400 hover:text-gray-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+                        </div>
+                        
+                        <!-- V2 & V3: Initial View Selector -->
+                        <div id="view-selector" class="flex-1 p-4 flex flex-col gap-3 panel-view bg-gray-50">
+                            <!-- Cards will be populated by JS based on version -->
+                        </div>
+
+                        <!-- V2: AI Agent List -->
+                        <div id="ai-agent-list-view" class="hidden flex-1 p-4 flex-col panel-view bg-gray-50">
+                            <button id="back-to-selector-ai-agent" class="text-sm text-gray-500 hover:text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+                            <div class="flex flex-col gap-3">
+                                 <button data-agent="sourcer" class="panel-selector-card bg-white hover:bg-gray-100 p-4 rounded-lg text-left w-full border border-gray-200"><h4 class="font-bold text-gray-800 mb-1">AI Sourcer</h4><p class="text-sm text-gray-500">Analyze pipeline and suggest sourcing channels.</p></button>
+                                 <button data-agent="legal" class="panel-selector-card bg-white hover:bg-gray-100 p-4 rounded-lg text-left w-full border border-gray-200"><h4 class="font-bold text-gray-800 mb-1">AI Legal Advisor</h4><p class="text-sm text-gray-500">Check job description for compliance issues.</p></button>
+                                 <button data-agent="marketing" class="panel-selector-card bg-white hover:bg-gray-100 p-4 rounded-lg text-left w-full border border-gray-200"><h4 class="font-bold text-gray-800 mb-1">AI Marketing Expert</h4><p class="text-sm text-gray-500">Improve job description copy to attract candidates.</p></button>
                             </div>
                         </div>
+
+                        <!-- V1, V2, V3: Comments View -->
+                        <div id="comments-view" class="hidden flex-col h-full panel-view">
+                             <button id="back-to-selector-comments" class="text-sm text-gray-500 hover:text-gray-900 m-4 mb-0 flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+                            <div id="comment-type-tabs" class="p-2 border-b border-gray-200 flex gap-2 flex-shrink-0">
+                                <button id="team-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-100 text-gray-800 flex-1"><i data-lucide="users" class="w-4 h-4 inline mr-2"></i>Team</button>
+                                <button id="private-tab-button" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:bg-gray-100 flex-1"><i data-lucide="lock" class="w-4 h-4 inline mr-2"></i>Private</button>
+                            </div>
+                            <div id="panel-content" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+                            <div class="p-4 border-t border-gray-200 bg-white relative flex-shrink-0">
+                                <div id="mentions-popup" class="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto"></div>
+                                <div class="relative"><textarea id="comment-input" placeholder="Add a comment... type '@' to mention" class="w-full border border-gray-300 bg-white text-gray-900 rounded-lg p-2 pr-20 resize-none focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-400" rows="3"></textarea><div class="absolute right-2 top-2 flex flex-col gap-2"><button id="post-button" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"><i data-lucide="send" class="w-4 h-4"></i></button><button id="attach-button" class="text-gray-400 p-2 rounded-md hover:bg-gray-100"><i data-lucide="paperclip" class="w-4 h-4"></i></button></div></div>
+                            </div>
+                        </div>
+
+                        <!-- V2, V3: AI Action View -->
+                        <div id="ai-actions-view" class="hidden flex-1 flex-col p-4 panel-view bg-gray-50">
+                             <button id="back-to-agents" class="text-sm text-gray-500 hover:text-gray-900 mb-4 flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Agents</button>
+                            <div class="bg-white p-3 rounded-lg flex-1 flex flex-col border border-gray-200"><div id="ai-output" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200 flex-1 overflow-y-auto prose prose-sm max-w-none"><p class="text-gray-500">Select an action below to begin.</p></div><div id="ai-actions" class="flex flex-wrap gap-2 mt-4 flex-shrink-0"></div></div>
+                        </div>
+                        
+                        <!-- V3: Tasks View -->
+                        <div id="tasks-view" class="hidden flex-1 flex-col panel-view bg-gray-50">
+                            <button id="back-to-selector-tasks" class="text-sm text-gray-500 hover:text-gray-900 m-4 mb-0 flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+                            <div id="task-list" class="flex-1 p-4 space-y-3 overflow-y-auto"></div>
+                            <div class="p-4 border-t border-gray-200 bg-white"><button class="w-full bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Add New Task</button></div>
+                        </div>
+                        
+                        <!-- V3: Scheduler View -->
+                        <div id="scheduler-view" class="hidden flex-1 flex-col panel-view bg-gray-50">
+                            <button id="back-to-selector-scheduler" class="text-sm text-gray-500 hover:text-gray-900 m-4 mb-0 flex items-center gap-2"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+                            <div id="event-list" class="flex-1 p-4 space-y-3 overflow-y-auto"></div>
+                        </div>
+
                     </div>
                 </div>
-
-                <!-- AI View (Unified for V1 and V2) -->
-                <div id="ai-view" class="hidden flex-1 flex-col p-4">
-                    <div class="bg-slate-800 p-3 rounded-lg flex-1 flex flex-col">
-                        <div class="flex justify-between items-center mb-2 flex-shrink-0">
-                            <h4 class="text-sm font-bold text-gray-200 flex items-center"><i data-lucide="sparkles" class="w-4 h-4 mr-2 text-purple-500"></i>AI Assistant</h4>
-                        </div>
-                        <div id="ai-output" class="text-sm text-gray-300 bg-slate-900 p-2 rounded-md border border-slate-700 flex-1 overflow-y-auto">
-                            <p class="text-gray-400">Select an action below to begin.</p>
-                        </div>
-                        <div id="ai-actions" class="flex flex-wrap gap-2 mt-2 flex-shrink-0">
-                            <!-- AI action buttons will be populated here by JS -->
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
-
+    
     <!-- === VERSION SWITCHER === -->
-    <div class="fixed bottom-4 right-4 z-50 bg-slate-900 border border-slate-700 rounded-full shadow-lg p-1 flex items-center gap-1 text-sm font-medium">
-        <button id="v1-button" class="px-4 py-1 rounded-full bg-slate-700 text-white">V1</button>
-        <button id="v2-button" class="px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800">V2</button>
+    <div class="fixed bottom-4 right-4 z-50 bg-white border border-gray-200 rounded-full shadow-lg p-1 flex items-center gap-1 text-sm font-medium">
+        <button id="v1-button" class="px-4 py-1 rounded-full text-gray-500 hover:bg-gray-100">V1</button>
+        <button id="v2-button" class="px-4 py-1 rounded-full text-gray-500 hover:bg-gray-100">V2</button>
+        <button id="v3-button" class="px-4 py-1 rounded-full bg-gray-800 text-white">V3</button>
     </div>
 
+
     <script>
-        // Rationale: All application logic is encapsulated within this script tag.
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- MOCK DATA --- //
             const MOCK_DATA = {
                 jobs: [{ id: 'job-1', title: 'Director of Office Supplies and General Happiness Distribution', owner: 'Rui Freitas', users: ['Miguel Carneiro', 'Joana Sousa', 'João Pinho', 'Rui Freitas', 'First Lasto'], type: 'Job Position', workflow: ['New', 'Qualified', 'Disqualified', 'Rejected'] }],
-                candidates: { 'job-1': [{ id: 'cand-1', firstName: 'Jeremy', lastName: 'James', status: 'Second Contact', applied: '24/05/2025', stars: 4, stage: 'Video Interview sent' }, { id: 'cand-2', firstName: 'António', lastName: 'Gomes', status: 'none', applied: '22/05/2025', stars: 0, stage: 'Requested' }, { id: 'cand-3', firstName: 'Rui', lastName: 'Freitas', status: 'none', applied: '20/05/2025', stars: 0, stage: '-' }] },
-                candidateProfiles: { 'cand-1': { name: 'Jeremy James', email: 'jeremy.james@skeeled.com', phone: '(934) 562-542', title: 'Entry Point' }, 'cand-2': { name: 'António Gomes', email: 'antonio.gomes@example.com', phone: '(123) 456-789', title: 'Senior Developer' }, 'cand-3': { name: 'Rui Freitas', email: 'rui.freitas@example.com', phone: '(987) 654-321', title: 'Project Manager' } },
-                comments: {
-                    'job-1': [
-                        { id: 99, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: '@Rui Freitas I have reviewed the job description but it needs a few adjustments before we can approve. Please review my feedback.', timestamp: '15 minutes ago', type: 'team', cta: { text: 'Review Job Changes', action: "console.log('CTA Clicked: Navigate to job editor.')" } },
-                        { id: 1, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Workflow seems solid, but we need to refine the post-application steps.', timestamp: '2 hours ago', type: 'team' }, 
-                        { id: 3, user: 'Rui Freitas', avatarColor: 'bg-blue-500', text: 'Received approval from management. Ready to start sourcing.', timestamp: '3 days ago', type: 'team' }
-                    ],
-                    'cand-1': [
-                        { id: 5, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Excellent video interview. Strong technical skills, but let's check cultural fit in the next round.", timestamp: '45 minutes ago', type: 'team' }, 
-                        { id: 6, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Agreed. @Rui Freitas can you schedule the team interview for next week?', timestamp: '30 minutes ago', type: 'team' }
-                    ],
-                    'cand-2': [{ id: 7, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Just sourced this candidate from an in-app source. Looks promising.", timestamp: '1 hour ago', type: 'team' }]
-                },
-                privateNotes: { 'job-1': [{ id: 1, text: 'Remember to check budget constraints before extending an offer.', timestamp: '1 day ago' }], 'cand-1': [{ id: 2, text: 'Follow up on their reference from BigTech Corp.', timestamp: '5 hours ago' }] }
+                candidates: { 'job-1': [ { id: 'cand-1', firstName: 'Jeremy', lastName: 'James', status: 'Second Contact', applied: '24/05/2025', stars: 4, stage: 'Video Interview sent' }, { id: 'cand-2', firstName: 'António', lastName: 'Gomes', status: 'none', applied: '22/05/2025', stars: 0, stage: 'Requested' }, { id: 'cand-3', firstName: 'Rui', lastName: 'Freitas', status: 'none', applied: '20/05/2025', stars: 0, stage: '-' }, { id: 'cand-4', firstName: 'Beatriz', lastName: 'Costa', status: 'New', applied: '19/05/2025', stars: 3, stage: 'Screening' }, { id: 'cand-5', firstName: 'Carlos', lastName: 'Silva', status: 'none', applied: '18/05/2025', stars: 0, stage: 'Sourced' }, { id: 'cand-6', firstName: 'Diana', lastName: 'Martins', status: 'First Contact', applied: '17/05/2025', stars: 5, stage: 'Phone Interview' }, { id: 'cand-7', firstName: 'Eduardo', lastName: 'Ferreira', status: 'none', applied: '16/05/2025', stars: 0, stage: 'Applied' }, { id: 'cand-8', firstName: 'Filipa', lastName: 'Santos', status: 'Hired', applied: '15/05/2025', stars: 5, stage: 'Offer Accepted' }, { id: 'cand-9', firstName: 'Gonçalo', lastName: 'Rodrigues', status: 'Rejected', applied: '14/05/2025', stars: 2, stage: 'Final Interview' }, { id: 'cand-10', firstName: 'Helena', lastName: 'Almeida', status: 'none', applied: '13/05/2025', stars: 0, stage: 'New' } ] },
+                candidateProfiles: { 'cand-1': { name: 'Jeremy James', email: 'jeremy.james@skeeled.com', phone: '(934) 562-542', title: 'Entry Point' }, 'cand-2': { name: 'António Gomes', email: 'antonio.gomes@example.com', phone: '(123) 456-789', title: 'Senior Developer' }, 'cand-3': { name: 'Rui Freitas', email: 'rui.freitas@example.com', phone: '(987) 654-321', title: 'Project Manager' }, 'cand-4': { name: 'Beatriz Costa', email: 'beatriz.costa@example.com', phone: '(111) 222-333', title: 'UX Designer' }, 'cand-5': { name: 'Carlos Silva', email: 'carlos.silva@example.com', phone: '(444) 555-666', title: 'Data Scientist' }, 'cand-6': { name: 'Diana Martins', email: 'diana.martins@example.com', phone: '(777) 888-999', title: 'Marketing Lead' }, 'cand-7': { name: 'Eduardo Ferreira', email: 'eduardo.f@example.com', phone: '(121) 313-414', title: 'Junior Developer' }, 'cand-8': { name: 'Filipa Santos', email: 'filipa.s@example.com', phone: '(515) 616-717', title: 'Product Owner' }, 'cand-9': { name: 'Gonçalo Rodrigues', email: 'goncalo.r@example.com', phone: '(818) 919-010', title: 'QA Engineer' }, 'cand-10': { name: 'Helena Almeida', email: 'helena.a@example.com', phone: '(232) 424-525', title: 'DevOps Engineer' } },
+                comments: { 'job-1': [{ id: 99, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: '@Rui Freitas I have reviewed the job description but it needs a few adjustments before we can approve. Please review my feedback.', timestamp: '15 minutes ago', type: 'team', cta: { text: 'Review Job Changes', action: "console.log('CTA Clicked: Navigate to job editor.')" } }, { id: 1, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Workflow seems solid, but we need to refine the post-application steps.', timestamp: '2 hours ago', type: 'team' }, { id: 3, user: 'Rui Freitas', avatarColor: 'bg-blue-500', text: 'Received approval from management. Ready to start sourcing.', timestamp: '3 days ago', type: 'team' }],'cand-1': [{ id: 5, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Excellent video interview. Strong technical skills, but let's check cultural fit in the next round.", timestamp: '45 minutes ago', type: 'team' }, { id: 6, user: 'Joana Sousa', avatarColor: 'bg-pink-500', text: 'Agreed. @Rui Freitas can you schedule the team interview for next week?', timestamp: '30 minutes ago', type: 'team' }], 'cand-2': [{ id: 7, user: 'Miguel Carneiro', avatarColor: 'bg-green-500', text: "Just sourced this candidate from an in-app source. Looks promising.", timestamp: '1 hour ago', type: 'team' }] },
+                privateNotes: { 'job-1': [{ id: 1, text: 'Remember to check budget constraints before extending an offer.', timestamp: '1 day ago' }], 'cand-1': [{ id: 2, text: 'Follow up on their reference from BigTech Corp.', timestamp: '5 hours ago' }] },
+                tasks: {'job-1': [{ id: 'task-1', title: 'Review JD for compliance', assignee: 'Rui Freitas', dueDate: 'Oct 8', status: 'completed' },{ id: 'task-2', title: 'Schedule screening calls', assignee: 'Joana Sousa', dueDate: 'Oct 10', status: 'in-progress' },{ id: 'task-3', title: 'Prepare interview questions', assignee: 'Miguel Carneiro', dueDate: 'Oct 12', status: 'todo' },],'cand-1': [{ id: 'task-4', title: 'Follow up on video interview', assignee: 'Joana Sousa', dueDate: 'Tomorrow', status: 'todo' }] },
+                events: { 'job-1': [ { id: 'evt-1', title: 'Internal Kick-off', date: 'Oct 07', time: 'Today @ 4:00 PM' }, { id: 'evt-2', title: 'Weekly Sync', date: 'Oct 09', time: '10:00 AM' }, ], 'cand-1': [ { id: 'evt-3', title: 'Team Interview w/ Jeremy James', date: 'Oct 10', time: '2:00 PM' } ] }
             };
             const MOCK_AI_RESPONSES = {
-                v1: {
-                    summarize: {
-                        'job-1': "The team has finalized the job workflow and received management approval. The main outstanding action is a request from Joana for Rui to review and adjust the job description based on her feedback before final approval.",
-                        'cand-1': "Miguel and Joana are aligned that the candidate is technically strong after the video interview. The key next step is a team interview to assess cultural fit, which Joana has asked Rui to schedule.",
-                    },
-                    analyze: {
-                        'cand-1': "<strong>Strengths:</strong> Strong technical performance in video interview. \n<strong>Areas for Review:</strong> Cultural fit needs to be assessed. Candidate has multiple active applications within the company, suggesting high interest.",
-                    },
-                    suggestReply: {
-                        'job-1': "Thanks for the feedback, @Joana Sousa. I'll review the changes and get back to you shortly.",
-                    }
-                },
-                v2: {
-                    'job-summarize': "Summary: The main action for this job is for Rui to review Joana's feedback on the job description before approval.",
-                    'job-analyze-pipeline': "Analysis: The pipeline shows healthy top-of-funnel activity, but the conversion rate from 'Qualified' to 'Interview' is below the company average of 25%. Suggest re-evaluating screening criteria.",
-                    'job-suggest-sourcing': "Suggestion: Based on the role requirements, consider sourcing from technical communities like 'Dev.to' and 'Stack Overflow Jobs' to supplement existing channels.",
-                    'cand-summarize': "Summary: Feedback is positive on technical skills. The next step is a team interview to assess cultural fit, which needs to be scheduled.",
-                    'cand-analyze': "Analysis: Strengths are in backend development (Python, Node.js). Weaknesses identified in frontend framework experience. High interest in the company is a positive signal.",
-                    'cand-draft-email': "Draft: Hi Jeremy, Thanks for your time in the video interview. The team was impressed with your technical background. We'd like to invite you for a team interview to discuss cultural fit. Are you available next Tuesday or Thursday afternoon? Best, [Your Name]",
-                }
+                'job-summarize': "<strong>Summary:</strong> The main action for this job is for Rui to review Joana's feedback on the job description before approval.", 
+                'job-analyze-pipeline': "<strong>Analysis:</strong> The pipeline shows healthy top-of-funnel activity, but the conversion rate from 'Qualified' to 'Interview' is below the company average of 25%. Suggest re-evaluating screening criteria.", 
+                'job-suggest-sourcing': "<strong>Suggestion:</strong> Based on the role requirements, consider sourcing from technical communities like 'Dev.to' and 'Stack Overflow Jobs' to supplement existing channels.", 
+                'cand-summarize': "<strong>Summary:</strong> Feedback is positive on technical skills. The next step is a team interview to assess cultural fit, which needs to be scheduled.", 
+                'cand-analyze': "<strong>Analysis:</strong> Strengths are in backend development (Python, Node.js). Weaknesses identified in frontend framework experience. High interest in the company is a positive signal.", 
+                'cand-draft-email': "<strong>Draft:</strong><br>Hi Jeremy,<br><br>Thanks for your time in the video interview. The team was impressed with your technical background. We'd like to invite you for a team interview to discuss cultural fit. Are you available next Tuesday or Thursday afternoon?<br><br>Best,<br>[Your Name]",
             };
             const usersForMentions = ['Rui Freitas', 'Joana Sousa', 'Miguel Carneiro', 'João Pinho', 'First Lasto', 'Admin User'];
 
             // --- STATE MANAGEMENT --- //
             let state = {
-                appVersion: 'V1',
+                appVersion: 'V3',
                 currentPage: 'job-overview',
                 isPanelOpen: false,
                 panelContext: {},
                 activePanelTab: 'team',
-                activePanelView: 'comments', // 'comments' or 'ai'
+                panelDisplayMode: 'selector', // 'selector', 'comments', 'ai-agents', 'ai-actions', 'tasks', 'scheduler'
                 comments: [],
                 privateNotes: [],
+                tasks: [],
+                events: [],
             };
 
             // --- DOM ELEMENT REFERENCES --- //
@@ -243,36 +209,41 @@
                 header: document.getElementById('header'),
                 breadcrumbs: document.getElementById('breadcrumbs'),
                 pageTitle: document.getElementById('page-title'),
-                pages: {
-                    jobOverview: document.getElementById('job-overview-page'),
-                    candidateList: document.getElementById('candidate-list-page'),
-                    candidateProfile: document.getElementById('candidate-profile-page')
-                },
+                pages: { jobOverview: document.getElementById('job-overview-page'), candidateList: document.getElementById('candidate-list-page'), candidateProfile: document.getElementById('candidate-profile-page') },
                 panel: document.getElementById('collaboration-panel'),
+                togglePanelButton: document.getElementById('toggle-panel-button'),
                 closePanelButton: document.getElementById('close-panel-button'),
                 panelTitle: document.getElementById('panel-title'),
                 panelSubtitle: document.getElementById('panel-subtitle'),
+                viewSelector: document.getElementById('view-selector'),
+                aiAgentListView: document.getElementById('ai-agent-list-view'),
                 commentsView: document.getElementById('comments-view'),
-                aiView: document.getElementById('ai-view'),
+                aiActionsView: document.getElementById('ai-actions-view'),
+                tasksView: document.getElementById('tasks-view'),
+                schedulerView: document.getElementById('scheduler-view'),
                 teamTabButton: document.getElementById('team-tab-button'),
                 privateTabButton: document.getElementById('private-tab-button'),
                 panelContent: document.getElementById('panel-content'),
                 commentInput: document.getElementById('comment-input'),
                 mentionsPopup: document.getElementById('mentions-popup'),
                 postButton: document.getElementById('post-button'),
-                attachButton: document.getElementById('attach-button'),
+                backToSelectorAiAgent: document.getElementById('back-to-selector-ai-agent'),
+                backToSelectorComments: document.getElementById('back-to-selector-comments'),
+                backToSelectorTasks: document.getElementById('back-to-selector-tasks'),
+                backToSelectorScheduler: document.getElementById('back-to-selector-scheduler'),
+                backToAgents: document.getElementById('back-to-agents'),
                 aiOutput: document.getElementById('ai-output'),
                 aiActions: document.getElementById('ai-actions'),
-                // Versioning
+                taskList: document.getElementById('task-list'),
+                eventList: document.getElementById('event-list'),
                 v1Button: document.getElementById('v1-button'),
                 v2Button: document.getElementById('v2-button'),
-                toggleCommentsButton: document.getElementById('toggle-comments-panel-button'),
-                toggleAiButton: document.getElementById('toggle-ai-panel-button'),
-                aiButtonContainer: document.getElementById('ai-button-container'),
+                v3Button: document.getElementById('v3-button'),
             };
 
             // --- RENDER FUNCTIONS --- //
             const renderIcons = () => { if (typeof lucide !== 'undefined') { lucide.createIcons(); } };
+            
             const renderBreadcrumbs = () => {
                 let crumbs = [];
                 if (state.currentPage === 'job-overview') crumbs = ['Dashboard', 'Jobs', 'Overview'];
@@ -281,160 +252,177 @@
                     const candidateName = MOCK_DATA.candidateProfiles[state.currentPage]?.name || 'Candidate';
                     crumbs = ['Dashboard', 'Jobs', 'Applicants', candidateName];
                 }
-                dom.breadcrumbs.innerHTML = crumbs.map((crumb, index) => `<span>${index > 0 ? '<span class="mx-2">/</span>' : ''}<a href="#" class="hover:text-blue-500 ${index === crumbs.length - 1 ? 'text-gray-800 font-medium' : ''}">${crumb}</a></span>`).join('');
+                const getClickHandler = (crumb) => {
+                    if (crumb === 'Dashboard' || crumb === 'Jobs') return `window.app.setPage('job-overview')`;
+                    if (crumb === 'Applicants') return `window.app.setPage('candidate-list')`;
+                    return '';
+                }
+                dom.breadcrumbs.innerHTML = crumbs.map((crumb, index) => {
+                    const isLast = index === crumbs.length - 1;
+                    const clickHandler = !isLast ? `onclick="${getClickHandler(crumb)}"` : '';
+                    return `<span>${index > 0 ? '<span class="mx-2">/</span>' : ''}<a href="#" class="${isLast ? 'text-gray-800 font-medium cursor-default' : 'hover:text-blue-500'}" ${clickHandler}>${crumb}</a></span>`;
+                }).join('');
                 dom.pageTitle.textContent = crumbs[crumbs.length - 1] || '';
             };
+            
             const renderJobOverview = () => {
                 const job = MOCK_DATA.jobs[0];
-                dom.pages.jobOverview.innerHTML = `
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                        <div class="flex justify-between items-start">
-                            <div>${['Owner', 'Users', 'Job type', 'Workflow'].map(label => {
-                                let content = '';
-                                if(label === 'Owner') content = `<span class="flex items-center gap-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-blue-500 rounded-full"></div>${job.owner}</span>`;
-                                if(label === 'Users') content = `<div class="flex items-center gap-2">${job.users.map(u => `<span class="flex items-center gap-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-gray-300 rounded-full"></div> ${u}</span>`).join('')}</div>`;
-                                if(label === 'Job type') content = `<span>${job.type}</span>`;
-                                if(label === 'Workflow') content = `<span class="text-gray-600">${job.workflow.join(' > ')}</span>`;
-                                return `<div class="flex items-center gap-4 mb-4"><span class="text-sm text-gray-500 w-20">${label}</span>${content}</div>`;
-                            }).join('')}</div>
-                            <div class="flex flex-col space-y-2">
-                                <button class="bg-[#41B6E6] text-white px-6 py-2 rounded-md hover:bg-[#3aa3cf]">Duplicate</button>
-                                <button onclick="window.app.setPage('candidate-list')" class="bg-[#41B6E6] text-white px-6 py-2 rounded-md hover:bg-[#3aa3cf]">View Candidates</button>
-                                <button class="bg-[#3A4A64] text-white px-6 py-2 rounded-md hover:bg-[#313e54]">Archive</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                        <h3 class="font-bold text-gray-800 mb-4">Post-application steps</h3>
-                        <div class="border border-dashed border-gray-300 rounded-lg p-10 flex flex-col items-center justify-center"><button class="text-blue-500 font-semibold hover:text-blue-600">Add template</button></div>
-                    </div>`;
+                dom.pages.jobOverview.innerHTML = `<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6"><div class="flex justify-between items-start"><div>${['Owner', 'Users', 'Job type', 'Workflow'].map(label => {let content = '';if(label === 'Owner') content = `<span class="flex items-center gap-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-blue-500 rounded-full"></div>${job.owner}</span>`;if(label === 'Users') content = `<div class="flex items-center gap-2">${job.users.map(u => `<span class="flex items-center gap-2 bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm"><div class="w-5 h-5 bg-gray-300 rounded-full"></div> ${u}</span>`).join('')}</div>`;if(label === 'Job type') content = `<span>${job.type}</span>`;if(label === 'Workflow') content = `<span class="text-gray-600">${job.workflow.join(' > ')}</span>`;return `<div class="flex items-center gap-4 mb-4"><span class="text-sm text-gray-500 w-20">${label}</span>${content}</div>`;}).join('')}</div><div class="flex flex-col space-y-2"><button class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">Duplicate</button><button onclick="window.app.setPage('candidate-list')" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">View Candidates</button><button class="border border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-100">Archive</button></div></div></div><div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6"><h3 class="font-bold text-gray-800 mb-4">Post-application steps</h3><div class="border border-dashed border-gray-300 rounded-lg p-10 flex flex-col items-center justify-center"><button class="text-blue-500 font-semibold hover:text-blue-600">Add template</button></div></div>`;
             };
+
             const renderCandidateList = () => {
                 const candidates = MOCK_DATA.candidates['job-1'];
-                dom.pages.candidateList.innerHTML = `
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <div class="p-4 border-b flex justify-between items-center">
-                             <div class="flex items-center gap-2">
-                                <div class="relative"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" placeholder="Search" class="border rounded-md pl-9 pr-3 py-1.5 w-64 focus:ring-2 focus:ring-blue-500 outline-none"/></div>
-                                <button class="bg-[#41B6E6] text-white px-4 py-1.5 rounded-md hover:bg-[#3aa3cf]">Search</button>
-                            </div>
-                            <button class="border rounded-md px-3 py-1.5 flex items-center gap-2 text-gray-600 hover:bg-gray-100"><i data-lucide="filter" class="w-4 h-4"></i> Filters</button>
-                        </div>
-                        <table class="w-full text-left text-sm">
-                            <thead><tr class="border-b bg-gray-50 text-gray-600">${['<input type="checkbox"/>', 'First name', 'Last name', 'Status', 'Applied', 'Stars', 'Steps'].map(h => `<th class="p-4 font-medium">${h}</th>`).join('')}</tr></thead>
-                            <tbody>${candidates.map(c => `<tr class="border-b hover:bg-blue-50/50">
-                                <td class="p-4"><input type="checkbox" /></td>
-                                <td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.firstName}</td>
-                                <td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.lastName}</td>
-                                <td class="p-4"><span class="border rounded px-2 py-0.5">${c.status}</span></td>
-                                <td class="p-4">${c.applied}</td>
-                                <td class="p-4">${c.stars > 0 ? `${c.stars} ⭐` : '-'}</td>
-                                <td class="p-4">${c.stage}</td>
-                            </tr>`).join('')}</tbody>
-                        </table>
-                    </div>`;
+                const isCompactView = state.isPanelOpen;
+                const tableHead = `<thead><tr class="border-b bg-gray-50 text-gray-600"><th class="p-4 font-medium"><input type="checkbox"/></th>${isCompactView ? `<th class="p-4 font-medium">Name</th>` : `<th class="p-4 font-medium">First name</th><th class="p-4 font-medium">Last name</th>`}${!isCompactView ? `<th class="p-4 font-medium">Status</th><th class="p-4 font-medium">Applied</th><th class="p-4 font-medium">Stars</th>` : ''}<th class="p-4 font-medium">Steps</th></tr></thead>`;
+                const tableBody = `<tbody>${candidates.map(c => `<tr class="border-b hover:bg-blue-50/50"><td class="p-4"><input type="checkbox" /></td>${isCompactView ? `<td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.firstName} ${c.lastName}</td>` : `<td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.firstName}</td><td class="p-4 text-blue-600 font-semibold cursor-pointer" onclick="window.app.setPage('${c.id}')">${c.lastName}</td>`}${!isCompactView ? `<td class="p-4"><span class="border rounded px-2 py-0.5">${c.status}</span></td><td class="p-4">${c.applied}</td><td class="p-4">${c.stars > 0 ? `${'⭐'.repeat(c.stars)}` : '-'}</td>` : ''}<td class="p-4">${c.stage}</td></tr>`).join('')}</tbody>`;
+                dom.pages.candidateList.innerHTML = `<div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto"><div class="p-4 border-b flex justify-between items-center"><div class="flex items-center gap-2"><div class="relative"><i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" placeholder="Search" class="border rounded-md pl-9 pr-3 py-1.5 w-64 focus:ring-2 focus:ring-blue-500 outline-none"/></div><button class="bg-blue-500 text-white px-4 py-1.5 rounded-md hover:bg-blue-600">Search</button></div><button class="border rounded-md px-3 py-1.5 flex items-center gap-2 text-gray-600 hover:bg-gray-100"><i data-lucide="filter" class="w-4 h-4"></i> Filters</button></div><table class="w-full text-left text-sm min-w-[600px]">${tableHead}${tableBody}</table></div>`;
             };
+            
             const renderCandidateProfile = (candidateId) => {
                 const profile = MOCK_DATA.candidateProfiles[candidateId];
-                 dom.pages.candidateProfile.innerHTML = `
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-8">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-4">
-                                <div class="w-20 h-20 bg-gray-700 rounded-full"></div>
-                                <div>
-                                    <h2 class="text-2xl font-bold text-gray-800">${profile.name}</h2>
-                                    <p class="text-gray-500">${profile.title}</p>
-                                    <div class="text-sm mt-2 space-y-1">
-                                        <p>Email: <a href="#" class="text-blue-500">${profile.email}</a></p>
-                                        <p>Phone: ${profile.phone}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div><button class="bg-blue-500 text-white px-8 py-2 rounded-md font-semibold hover:bg-blue-600">Hire</button></div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div class="col-span-1 space-y-4">
-                                <h4 class="font-bold">Tags</h4>
-                                <div class="flex flex-wrap gap-2"><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">Archived ❌</span><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">HS Skills ❌</span></div>
-                            </div>
-                            <div class="col-span-2 space-y-4">
-                                <h4 class="font-bold">Score Card 3.5</h4>
-                                <div class="border rounded-md">
-                                    <div class="p-3 border-b flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div>
-                                    <div class="p-3 flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
+                 dom.pages.candidateProfile.innerHTML = `<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-8"><div class="flex items-start justify-between"><div class="flex items-center gap-4"><div class="w-20 h-20 bg-gray-700 rounded-full"></div><div><h2 class="text-2xl font-bold text-gray-800">${profile.name}</h2><p class="text-gray-500">${profile.title}</p><div class="text-sm mt-2 space-y-1"><p>Email: <a href="#" class="text-blue-500">${profile.email}</a></p><p>Phone: ${profile.phone}</p></div></div></div><div><button class="bg-blue-500 text-white px-8 py-2 rounded-md font-semibold hover:bg-blue-600">Hire</button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="col-span-1 space-y-4"><h4 class="font-bold">Tags</h4><div class="flex flex-wrap gap-2"><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">Archived ❌</span><span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-md text-sm">HS Skills ❌</span></div></div><div class="col-span-2 space-y-4"><h4 class="font-bold">Score Card 3.5</h4><div class="border rounded-md"><div class="p-3 border-b flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div><div class="p-3 flex justify-between items-center"><span>3.5 Awesome Score Card</span><span class="text-gray-500 text-sm">23/09/2020</span></div></div></div></div></div>`;
             };
+
             const renderPanelContent = () => {
                 if(state.activePanelTab === 'team') {
-                    dom.panelContent.innerHTML = state.comments.length > 0 ? state.comments.map(c => `
-                        <div class="flex gap-3">
-                            <div class="w-8 h-8 rounded-full flex-shrink-0 ${c.avatarColor} flex items-center justify-center text-white text-sm font-bold">${c.user.charAt(0)}</div>
-                            <div>
-                                <div class="flex items-baseline gap-2"><span class="font-bold text-gray-200 text-sm">${c.user}</span><span class="text-xs text-gray-400">${c.timestamp}</span></div>
-                                <p class="text-sm text-gray-300">${c.text.replace(/(@\w+\s*\w*)/g, '<strong class="text-blue-400 font-medium">$1</strong>')}</p>
-                                ${c.cta ? `<div class="mt-2"><button onclick="${c.cta.action}" class="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-blue-600">${c.cta.text}</button></div>` : ''}
-                            </div>
-                        </div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">No team comments yet.</p>`;
+                    dom.panelContent.innerHTML = state.comments.length > 0 ? state.comments.map(c => `<div class="flex gap-3"><div class="w-8 h-8 rounded-full flex-shrink-0 ${c.avatarColor} flex items-center justify-center text-white text-sm font-bold">${c.user.charAt(0)}</div><div><div class="flex items-baseline gap-2"><span class="font-bold text-gray-800 text-sm">${c.user}</span><span class="text-xs text-gray-500">${c.timestamp}</span></div><p class="text-sm text-gray-600">${c.text.replace(/(@\w+\s*\w*)/g, '<strong class="text-blue-500 font-medium">$1</strong>')}</p>${c.cta ? `<div class="mt-2"><button onclick="${c.cta.action}" class="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md hover:bg-blue-600">${c.cta.text}</button></div>` : ''}</div></div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">No team comments yet.</p>`;
                 } else {
-                     dom.panelContent.innerHTML = state.privateNotes.length > 0 ? state.privateNotes.map(n => `
-                        <div class="bg-yellow-900/50 border border-yellow-700/50 p-3 rounded-md">
-                            <p class="text-sm text-yellow-300">${n.text}</p>
-                            <p class="text-right text-xs text-yellow-500 mt-2">${n.timestamp}</p>
-                        </div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">You have no private notes here.</p>`;
+                     dom.panelContent.innerHTML = state.privateNotes.length > 0 ? state.privateNotes.map(n => `<div class="bg-yellow-50 border border-yellow-200 p-3 rounded-md"><p class="text-sm text-yellow-800">${n.text}</p><p class="text-right text-xs text-yellow-600 mt-2">${n.timestamp}</p></div>`).join('') : `<p class="text-center text-sm text-gray-500 mt-8">You have no private notes here.</p>`;
                 }
             };
+            
+            const renderAiActions = () => {
+                let actions = [];
+                if(state.panelContext.type === 'Job') {
+                    actions.push({ label: "Summarize thread", handler: "window.app.handleAiAction('job-summarize')" });
+                    actions.push({ label: "Analyze pipeline", handler: "window.app.handleAiAction('job-analyze-pipeline')" });
+                    actions.push({ label: "Suggest sourcing", handler: "window.app.handleAiAction('job-suggest-sourcing')" });
+                } else { // Candidate
+                    actions.push({ label: "Summarize feedback", handler: "window.app.handleAiAction('cand-summarize')" });
+                    actions.push({ label: "Analyze strengths", handler: "window.app.handleAiAction('cand-analyze')" });
+                    actions.push({ label: "Draft outreach email", handler: "window.app.handleAiAction('cand-draft-email')" });
+                }
+                dom.aiOutput.innerHTML = `<p class="text-gray-500">Select an action below to begin.</p>`;
+                dom.aiActions.innerHTML = actions.map(action => `<button onclick="${action.handler}" class="bg-gray-200 border border-gray-300 text-gray-700 text-xs px-2 py-1 rounded-md hover:bg-gray-300">${action.label}</button>`).join('');
+            };
+
             const renderPanelView = () => {
-                if(state.activePanelView === 'comments') {
-                    dom.commentsView.style.display = 'flex';
-                    dom.aiView.style.display = 'none';
-                    dom.panelTitle.textContent = state.panelContext.type === 'Job' ? 'Job Activity' : `Activity: ${state.panelContext.name}`;
-                } else { // 'ai'
-                    dom.commentsView.style.display = 'none';
-                    dom.aiView.style.display = 'flex';
-                    dom.panelTitle.textContent = 'AI Assistant';
-                    renderAiActions();
+                dom.panel.querySelectorAll('.panel-view').forEach(el => el.classList.add('hidden'));
+                const backButton = dom.commentsView.querySelector('#back-to-selector-comments');
+                if (backButton) {
+                    backButton.style.display = state.appVersion === 'V1' ? 'none' : 'flex';
+                }
+
+                switch(state.panelDisplayMode) {
+                    case 'selector':
+                        renderSelectorView();
+                        dom.viewSelector.classList.remove('hidden');
+                        dom.panelTitle.textContent = 'Collaboration';
+                        break;
+                    case 'comments':
+                        dom.commentsView.classList.remove('hidden');
+                        dom.panelTitle.textContent = state.panelContext.type === 'Job' ? 'Job Activity' : `Activity: ${state.panelContext.name}`;
+                        break;
+                    case 'ai-agents':
+                        dom.aiAgentListView.classList.remove('hidden');
+                        dom.panelTitle.textContent = 'Select AI Assistant';
+                        break;
+                    case 'ai-actions':
+                        dom.aiActionsView.classList.remove('hidden');
+                        dom.panelTitle.textContent = 'AI Assistant';
+                        renderAiActions();
+                        break;
+                    case 'tasks':
+                        dom.tasksView.classList.remove('hidden');
+                        dom.panelTitle.textContent = 'Tasks';
+                        renderTasks();
+                        break;
+                    case 'scheduler':
+                        dom.schedulerView.classList.remove('hidden');
+                        dom.panelTitle.textContent = 'Scheduler';
+                        renderScheduler();
+                        break;
                 }
                 renderIcons();
             };
-            const renderAiActions = () => {
-                let actions = [];
-                if (state.appVersion === 'V1') {
-                    const contextId = state.panelContext.id;
-                    if(MOCK_AI_RESPONSES.v1.summarize[contextId]) actions.push({ label: 'Summarize Thread', handler: `window.app.handleAiAction('summarize')`});
-                    if(state.panelContext.type === 'Candidate' && MOCK_AI_RESPONSES.v1.analyze[contextId]) actions.push({ label: 'Analyze Candidate', handler: `window.app.handleAiAction('analyze')`});
-                    if(MOCK_AI_RESPONSES.v1.suggestReply[contextId]) actions.push({ label: 'Suggest Reply', handler: `window.app.handleAiAction('suggestReply')`});
-                } else { // V2
-                    if(state.panelContext.type === 'Job') {
-                        actions.push({ label: "Summarize thread", handler: "window.app.handleAiAction('job-summarize')" });
-                        actions.push({ label: "Analyze pipeline", handler: "window.app.handleAiAction('job-analyze-pipeline')" });
-                        actions.push({ label: "Suggest sourcing", handler: "window.app.handleAiAction('job-suggest-sourcing')" });
-                    } else { // Candidate
-                        actions.push({ label: "Summarize feedback", handler: "window.app.handleAiAction('cand-summarize')" });
-                        actions.push({ label: "Analyze strengths", handler: "window.app.handleAiAction('cand-analyze')" });
-                        actions.push({ label: "Draft outreach email", handler: "window.app.handleAiAction('cand-draft-email')" });
-                    }
-                }
-                dom.aiOutput.innerHTML = `<p class="text-gray-400">Select an action below.</p>`;
-                dom.aiActions.innerHTML = actions.map(action => `<button onclick="${action.handler}" class="bg-slate-700 border border-slate-600 text-gray-300 text-xs px-2 py-1 rounded-md hover:bg-slate-600">${action.label}</button>`).join('');
+            
+            const renderSelectorView = () => {
+                const baseCards = [
+                    { view: 'comments', icon: 'users', title: 'Team Collaboration', text: 'Leave comments and private notes.', color: 'text-blue-500' },
+                ];
+                const v2Cards = [
+                    ...baseCards,
+                    { view: 'ai-agents', icon: 'sparkles', title: 'AI Assistant', text: 'Get help from specialized AI agents.', color: 'text-purple-500' }
+                ];
+                const v3Cards = [
+                    { view: 'comments', icon: 'users', title: 'Team Collaboration', text: 'Leave comments and private notes.', color: 'text-blue-500' },
+                    { view: 'ai-agents', icon: 'sparkles', title: 'AI Assistant', text: 'Get help from specialized AI agents.', color: 'text-purple-500' },
+                    { view: 'tasks', icon: 'check-square', title: 'Task Management', text: 'See, edit, and create tasks.', color: 'text-green-500' },
+                    { view: 'scheduler', icon: 'calendar', title: 'Scheduler', text: 'View your scheduled events.', color: 'text-orange-500' }
+                ];
+
+                let cards;
+                if (state.appVersion === 'V3') cards = v3Cards;
+                else if (state.appVersion === 'V2') cards = v2Cards;
+                else cards = baseCards;
+                
+                dom.viewSelector.innerHTML = cards.map(card => `
+                    <button data-view="${card.view}" class="panel-selector-card bg-white hover:bg-gray-100 p-4 rounded-lg text-left w-full border border-gray-200 transition-all duration-150 shadow-sm hover:shadow-md">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="${card.icon}" class="w-6 h-6 ${card.color}"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">${card.title}</h4>
+                                <p class="text-sm text-gray-500">${card.text}</p>
+                            </div>
+                        </div>
+                    </button>
+                `).join('');
+                renderIcons();
             };
+            
+            const renderTasks = () => {
+                dom.taskList.innerHTML = state.tasks.length > 0 ? state.tasks.map(task => `
+                    <div data-status="${task.status}" class="bg-white p-3 rounded-md border border-gray-200">
+                        <div class="flex justify-between items-start">
+                             <p class="font-medium task-title text-gray-800">${task.title}</p>
+                             <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 capitalize">${task.status}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 text-xs text-gray-500">
+                            <span>Assignee: ${task.assignee}</span>
+                            <span>Due: ${task.dueDate}</span>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-center text-sm text-gray-500 mt-8">No tasks for this context.</p>';
+            };
+
+            const renderScheduler = () => {
+                 dom.eventList.innerHTML = state.events.length > 0 ? state.events.map(event => `
+                    <div class="bg-white p-3 rounded-md border border-gray-200 flex items-center gap-3">
+                        <div class="flex flex-col items-center justify-center p-2 bg-gray-100 rounded-md">
+                             <span class="text-xs text-gray-500">${event.date.split(' ')[0]}</span>
+                             <span class="font-bold text-gray-800 text-lg">${event.date.split(' ')[1]}</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${event.title}</p>
+                            <p class="text-sm text-gray-500">${event.time}</p>
+                        </div>
+                    </div>
+                `).join('') : '<p class="text-center text-sm text-gray-500 mt-8">No scheduled events.</p>';
+            };
+
             const renderAppVersion = () => {
-                if (state.appVersion === 'V1') {
-                    dom.v1Button.className = 'px-4 py-1 rounded-full bg-slate-700 text-white';
-                    dom.v2Button.className = 'px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800';
-                    dom.aiButtonContainer.classList.add('hidden');
-                     if (state.isPanelOpen && state.activePanelView === 'ai') {
-                        togglePanel(false);
-                    }
-                } else { // V2
-                    dom.v2Button.className = 'px-4 py-1 rounded-full bg-slate-700 text-white';
-                    dom.v1Button.className = 'px-4 py-1 rounded-full text-gray-400 hover:bg-slate-800';
-                    dom.aiButtonContainer.classList.remove('hidden');
-                }
-                if (state.isPanelOpen && state.activePanelView === 'ai') {
-                    renderAiActions();
+                const activeClasses = 'bg-gray-800 text-white';
+                const inactiveClasses = 'text-gray-500 hover:bg-gray-100';
+                const buttons = [dom.v1Button, dom.v2Button, dom.v3Button];
+                buttons.forEach(btn => btn.className = `px-4 py-1 rounded-full ${inactiveClasses}`);
+                
+                if (state.appVersion === 'V1') dom.v1Button.className = `px-4 py-1 rounded-full ${activeClasses}`;
+                else if (state.appVersion === 'V2') dom.v2Button.className = `px-4 py-1 rounded-full ${activeClasses}`;
+                else if (state.appVersion === 'V3') dom.v3Button.className = `px-4 py-1 rounded-full ${activeClasses}`;
+
+                if (state.isPanelOpen) {
+                    state.panelDisplayMode = state.appVersion === 'V1' ? 'comments' : 'selector';
+                    renderPanelView();
                 }
             };
             
@@ -446,7 +434,7 @@
                     const query = lastWord.substring(1).toLowerCase();
                     const filteredUsers = usersForMentions.filter(u => u.toLowerCase().includes(query));
                     if (filteredUsers.length > 0) {
-                        dom.mentionsPopup.innerHTML = filteredUsers.map(u => `<div class="p-2 hover:bg-slate-700 cursor-pointer text-sm mention-user text-white" data-user="${u}">${u}</div>`).join('');
+                        dom.mentionsPopup.innerHTML = filteredUsers.map(u => `<div class="p-2 hover:bg-gray-100 cursor-pointer text-sm mention-user text-gray-800" data-user="${u}">${u}</div>`).join('');
                         dom.mentionsPopup.classList.remove('hidden');
                     } else { dom.mentionsPopup.classList.add('hidden'); }
                 } else { dom.mentionsPopup.classList.add('hidden'); }
@@ -462,7 +450,8 @@
                     state.panelContext = { type: 'Candidate', name: profile.name, id: page };
                 }
                 updatePanelForContext();
-                Object.values(dom.pages).forEach(p => p.classList.add('page-hidden'));
+                document.querySelectorAll('.page-container').forEach(p => p.classList.add('page-hidden'));
+                
                 if (page === 'job-overview') {
                     dom.pages.jobOverview.classList.remove('page-hidden');
                     renderJobOverview();
@@ -473,44 +462,56 @@
                     dom.pages.candidateProfile.classList.remove('page-hidden');
                     renderCandidateProfile(page);
                 }
+                
                 renderBreadcrumbs();
                 renderIcons(); 
             };
-
-            const togglePanel = (forceOpen = null, view = 'comments') => {
+            
+            const togglePanel = (forceOpen = null) => {
                 const shouldOpen = forceOpen !== null ? forceOpen : !state.isPanelOpen;
-                if (shouldOpen) {
-                    state.isPanelOpen = true;
-                    state.activePanelView = view;
+                if (state.isPanelOpen === shouldOpen) return; 
+
+                state.isPanelOpen = shouldOpen;
+                if (state.isPanelOpen) {
+                    state.panelDisplayMode = state.appVersion === 'V1' ? 'comments' : 'selector';
+                    dom.panel.classList.remove('hidden');
                     renderPanelView();
-                    dom.panel.classList.remove('translate-x-full');
                 } else {
-                    state.isPanelOpen = false;
-                    dom.panel.classList.add('translate-x-full');
+                    dom.panel.classList.add('hidden');
                 }
+                
+                if(state.currentPage === 'candidate-list') { renderCandidateList(); }
+                renderIcons();
+            };
+
+            const setPanelDisplayMode = (mode) => {
+                state.panelDisplayMode = mode;
+                renderPanelView();
             };
 
             const setPanelTab = (tab) => {
                 state.activePanelTab = tab;
-                if(tab === 'team') {
-                    dom.teamTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white";
-                    dom.privateTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800";
-                } else {
-                    dom.privateTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md bg-slate-700 text-white";
-                    dom.teamTabButton.className = "px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-slate-800";
-                }
+                const baseTabClasses = 'px-3 py-1.5 text-sm font-medium rounded-md flex-1';
+                const activeTabClasses = 'bg-gray-100 text-gray-800';
+                const inactiveTabClasses = 'text-gray-500 hover:bg-gray-100';
+                dom.teamTabButton.className = `${baseTabClasses} ${tab === 'team' ? activeTabClasses : inactiveTabClasses}`;
+                dom.privateTabButton.className = `${baseTabClasses} ${tab === 'private' ? activeTabClasses : inactiveTabClasses}`;
                 renderPanelContent();
                 renderIcons();
-            }
-
+            };
+            
             const updatePanelForContext = () => {
                 const { type, name, id } = state.panelContext;
                 dom.panelSubtitle.textContent = type === 'Job' ? name : `${type}: ${name}`;
                 state.comments = MOCK_DATA.comments[id] || [];
                 state.privateNotes = MOCK_DATA.privateNotes[id] || [];
-                renderPanelContent();
+                state.tasks = MOCK_DATA.tasks[id] || [];
+                state.events = MOCK_DATA.events[id] || [];
+
                 if(state.isPanelOpen) {
                     renderPanelView();
+                } else {
+                    renderPanelContent(); 
                 }
             };
 
@@ -518,41 +519,52 @@
                 const text = dom.commentInput.value.trim();
                 if (text === '') return;
                 if (state.activePanelTab === 'team') {
-                     state.comments.push({ id: Date.now(), user: 'You', avatarColor: 'bg-purple-500', text: text, timestamp: 'Just now', type: 'team' });
+                     state.comments.unshift({ id: Date.now(), user: 'You', avatarColor: 'bg-purple-500', text: text, timestamp: 'Just now', type: 'team' });
                 } else {
-                    state.privateNotes.push({ id: Date.now(), text: text, timestamp: 'Just now' });
+                    state.privateNotes.unshift({ id: Date.now(), text: text, timestamp: 'Just now' });
                 }
                 dom.commentInput.value = '';
                 renderPanelContent();
             };
 
             const handleAiAction = (actionType) => {
-                let response;
-                if (state.appVersion === 'V1') {
-                    const contextId = state.panelContext.id;
-                    const actionCategory = Object.keys(MOCK_AI_RESPONSES.v1).find(key => MOCK_AI_RESPONSES.v1[key][contextId]);
-                    response = MOCK_AI_RESPONSES.v1[actionCategory]?.[contextId];
-                } else { //V2
-                    response = MOCK_AI_RESPONSES.v2[actionType];
-                }
-                
+                const response = MOCK_AI_RESPONSES[actionType];
                 dom.aiOutput.innerHTML = `<p class="text-gray-500 animate-pulse">Thinking...</p>`;
                 setTimeout(() => {
                     dom.aiOutput.innerHTML = response || `No suggestion available for this context.`;
                 }, 750);
             };
-
+            
             const setVersion = (version) => {
+                if (state.appVersion === version) return;
                 state.appVersion = version;
                 renderAppVersion();
             };
 
             // --- INITIALIZATION --- //
             const init = () => {
-                // Listeners
-                dom.toggleCommentsButton.addEventListener('click', () => togglePanel(null, 'comments'));
-                dom.toggleAiButton.addEventListener('click', () => togglePanel(null, 'ai'));
+                // Event Listeners
+                dom.togglePanelButton.addEventListener('click', () => togglePanel());
                 dom.closePanelButton.addEventListener('click', () => togglePanel(false));
+                
+                dom.viewSelector.addEventListener('click', (e) => {
+                    const card = e.target.closest('.panel-selector-card');
+                    if (!card) return;
+                    const view = card.dataset.view;
+                    setPanelDisplayMode(view);
+                });
+
+                dom.aiAgentListView.addEventListener('click', (e) => {
+                    const card = e.target.closest('.panel-selector-card');
+                    if (!card) return;
+                    setPanelDisplayMode('ai-actions');
+                });
+                
+                dom.backToSelectorAiAgent.addEventListener('click', () => setPanelDisplayMode('selector'));
+                dom.backToSelectorComments.addEventListener('click', () => setPanelDisplayMode('selector'));
+                dom.backToSelectorTasks.addEventListener('click', () => setPanelDisplayMode('selector'));
+                dom.backToSelectorScheduler.addEventListener('click', () => setPanelDisplayMode('selector'));
+                dom.backToAgents.addEventListener('click', () => setPanelDisplayMode('ai-agents'));
                 dom.teamTabButton.addEventListener('click', () => setPanelTab('team'));
                 dom.privateTabButton.addEventListener('click', () => setPanelTab('private'));
                 dom.postButton.addEventListener('click', handlePost);
@@ -567,13 +579,15 @@
                         dom.commentInput.focus();
                     }
                 });
+                
                 dom.v1Button.addEventListener('click', () => setVersion('V1'));
                 dom.v2Button.addEventListener('click', () => setVersion('V2'));
-
-                // Initial setup
-                setPage('job-overview');
+                dom.v3Button.addEventListener('click', () => setVersion('V3'));
+                
+                // Initial Setup
+                setPage('candidate-list');
                 renderAppVersion();
-                window.app = { setPage, handleAiAction };
+                window.app = { setPage, handleAiAction, setVersion };
                 renderIcons();
             };
             
