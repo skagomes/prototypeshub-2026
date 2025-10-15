@@ -287,21 +287,85 @@
                 document.body
             );
         };
+        const PersonaliseConfirmationModal = ({ original, suggestion, onConfirm, onClose }) => {
+            const [dropdownOpen, setDropdownOpen] = useState(false);
+            const dropdownRef = useRef(null);
+
+            const handleAction = (action) => {
+                onConfirm(action);
+                onClose();
+            };
+
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                        setDropdownOpen(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, [dropdownRef]);
+
+            return ReactDOM.createPortal(
+                 <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
+                        <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+                            <h2 className="text-xl font-bold text-slate-800">AI Suggestion</h2>
+                            <Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}><Icon name="x" className="w-5 h-5"/></Button>
+                        </header>
+                        <main className="p-6">
+                             <div>
+                                <h3 className="text-sm font-bold text-blue-600 uppercase mb-2">AI Suggestion</h3>
+                                <div className="p-3 bg-blue-50 rounded-md text-sm text-slate-800 h-48 overflow-y-auto whitespace-pre-wrap">{suggestion}</div>
+                            </div>
+                        </main>
+                        <footer className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <Button variant="secondary" onClick={onClose}>Keep Original</Button>
+                             <div className="relative inline-flex" ref={dropdownRef}>
+                                <Button variant="primary" className="rounded-r-none" onClick={() => handleAction('replace')}>Replace Text</Button>
+                                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="px-2 py-2 bg-blue-700 text-white rounded-r-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600">
+                                    <Icon name="chevronDown" className="w-4 h-4"/>
+                                </button>
+                                {dropdownOpen && (
+                                    <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-lg z-10 border border-slate-200">
+                                        <a href="#" onClick={(e) => { e.preventDefault(); handleAction('insert'); }} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Insert Below</a>
+                                    </div>
+                                )}
+                            </div>
+                        </footer>
+                    </div>
+                </div>,
+                document.body
+            )
+        };
         const SendEmailPanel = ({ candidate, onClose, emailState, onEmailChange, onGenerateEmail, emailVersion }) => {
             const [isAiModalOpen, setIsAiModalOpen] = useState(false);
             const [isPersonalising, setIsPersonalising] = useState(false);
+            const [isPersonaliseModalOpen, setIsPersonaliseModalOpen] = useState(false);
+            const [aiSuggestion, setAiSuggestion] = useState('');
             
             const handlePersonalise = async () => {
                 setIsPersonalising(true);
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                const personalisedBody = emailState.body + `\n\nPS: I noticed your extensive experience with B2B SaaS products which is highly relevant for our team.`;
-                onGenerateEmail({ subject: emailState.subject, body: personalisedBody });
+                const suggestion = emailState.body + `\n\nPS: I noticed your extensive experience with B2B SaaS products at Acme Corp, which is highly relevant for our team.`;
+                setAiSuggestion(suggestion);
                 setIsPersonalising(false);
+                setIsPersonaliseModalOpen(true);
+            };
+
+            const handleConfirmPersonalisation = (actionType) => {
+                if(actionType === 'replace') {
+                    onGenerateEmail({ subject: emailState.subject, body: aiSuggestion });
+                } else if (actionType === 'insert') {
+                    onGenerateEmail({ subject: emailState.subject, body: emailState.body + '\n\n' + aiSuggestion });
+                }
+                setIsPersonaliseModalOpen(false);
             };
 
             return (
                  <React.Fragment>
                     {isAiModalOpen && <AiCopilotModal candidate={candidate} onClose={() => setIsAiModalOpen(false)} onGenerate={onGenerateEmail} />}
+                    {isPersonaliseModalOpen && <PersonaliseConfirmationModal suggestion={aiSuggestion} onConfirm={handleConfirmPersonalisation} onClose={() => setIsPersonaliseModalOpen(false)} />}
                     <div className="w-full h-full flex flex-col bg-white">
                         <header className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0 bg-slate-50">
                             <h2 className="text-xl font-bold text-slate-800">Send Email (v{emailVersion})</h2>
@@ -333,7 +397,7 @@
         const CandidateProfilePage = ({ candidate, onBack, onOpenEmail, ...props }) => {
              return (
                 <div className="relative w-full h-full">
-                    {props.emailVersion && <VersionToggle version={props.emailVersion} setVersion={props.setEmailVersion} />}
+                    <VersionToggle version={props.emailVersion} setVersion={props.setEmailVersion} />
                     <div className="p-6">
                          <div className="flex justify-between items-start mb-6">
                             <div>
@@ -361,7 +425,7 @@
         
         function App() {
             const [state, setState] = useState({
-                page: 'applicants', candidateId: null, isEmailOpen: false, emailVersion: 'v2', tags: [], skills: [], 
+                page: 'applicants', candidateId: null, isEmailOpen: false, emailVersion: 'v1', tags: [], skills: [], 
                 modals: { confirmTags: false, confirmSkills: false }, 
                 generated: { tags: [], skills: [] },
                 emailState: { subject: '', body: '' }
