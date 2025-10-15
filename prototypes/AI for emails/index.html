@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Platform - Exploration Prototype</title>
+    <!-- Rationale: CDN scripts are used to include necessary libraries without a build step. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Rationale: A basic fade-in animation improves the perceived performance of modals and panels. */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Rationale: The entire React application is contained within this script tag.
+        // Babel will transpile the JSX in the browser on the fly. This is suitable only for development/prototyping.
+        const { useState, useEffect, useRef } = React;
+
+        const Icon = ({ name, className = 'w-6 h-6' }) => {
+            const icons = {
+                briefcase: `<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />`,
+                users: `<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`,
+                layoutDashboard: `<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>`,
+                settings: `<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
+                search: `<circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />`,
+                mail: `<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>`,
+                chevronDown: `<polyline points="6 9 12 15 18 9" />`,
+                star: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />`,
+                chevronLeft: `<path d="m15 18-6-6 6-6" />`,
+                fileText: `<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>`,
+                plus: `<path d="M5 12h14M12 5v14"/>`,
+                x: `<path d="M18 6 6 18M6 6l12 12"/>`,
+                wand: `<path d="M15 4V2m0 14v-2M8 9h2m6 0h2M12 2v2m0 14v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41M2 12h2m14 0h2"/>`,
+            };
+            return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} dangerouslySetInnerHTML={{ __html: icons[name] }} />;
+        };
+
+        const mockApplicants = [
+            { id: 1, firstName: 'Stephanie', lastName: 'Cianciolo', role: 'Senior Product Manager', source: 'External', status: 'Withdrawn', applied: '10/11/2025', stars: 4.8, comments: 'Strong background in B2B SaaS, but withdrew for personal reasons.' },
+            { id: 2, firstName: 'Elliot', lastName: 'Bodily', role: 'DevOps Engineer', source: 'Spontaneous', status: 'Technical Test', applied: '10/11/2025', stars: 3.9, comments: 'Passed initial screening. Technical test sent. Good experience with AWS and Kubernetes.' },
+            { id: 3, firstName: 'Isabelle', lastName: 'Fletcher', role: 'Lead UX Designer', source: 'External', status: 'Emailed', applied: '10/11/2025', stars: 3.6, comments: 'Portfolio looks promising. Emailed for an initial chat.' },
+        ];
+
+        const jobData = { title: 'Director of Office Supplies & General Happiness', id: 'OPB12345' };
+
+        const Button = ({ children, variant = 'primary', className = '', ...props }) => {
+            const baseClasses = 'px-4 py-2 text-sm font-bold rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center';
+            const variantClasses = {
+                primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-600 hover:shadow-md',
+                secondary: 'bg-slate-200 text-slate-800 hover:bg-slate-300 focus:ring-slate-400',
+                ghost: 'bg-transparent text-slate-600 hover:bg-slate-100',
+            };
+            return <button className={`${baseClasses} ${variantClasses[variant]} ${className}`} {...props}>{children}</button>;
+        };
+
+        const ButtonGroup = ({ children }) => <div className="flex items-center space-x-2">{children}</div>;
+
+        const StatusPill = ({ status }) => {
+            const statusStyles = { 'Withdrawn': 'bg-red-100 text-red-800 ring-red-200', 'Technical Test': 'bg-sky-100 text-sky-800 ring-sky-200', 'Emailed': 'bg-amber-100 text-amber-800 ring-amber-200' };
+            return <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ring-1 ring-inset ${statusStyles[status] || 'bg-slate-200 text-slate-800 ring-slate-300'}`}>{status}</span>;
+        };
+        const Sidebar = () => {
+             const navItems = [
+                { id: 'dashboard', icon: 'layoutDashboard', label: 'Dashboard' },
+                { id: 'jobs', icon: 'briefcase', label: 'Jobs' },
+                { id: 'applicants', icon: 'users', label: 'Applicants' },
+                { id: 'search', icon: 'search', label: 'Search' },
+            ];
+            const [activeItem, setActiveItem] = useState('applicants');
+            return (
+                <aside className="w-16 bg-slate-900 h-screen flex-col items-center py-4 space-y-4 text-slate-300 flex-shrink-0 hidden md:flex">
+                    <div className="text-white text-2xl font-bold mb-4">S</div>
+                    <nav className="flex flex-col items-center space-y-2 w-full">
+                        {navItems.map(item => ( <button key={item.id} onClick={() => setActiveItem(item.id)} className={`p-3 rounded-lg w-12 h-12 flex items-center justify-center transition-colors duration-200 ${activeItem === item.id ? 'bg-blue-600 text-white' : 'hover:bg-slate-700'}`} title={item.label}><Icon name={item.icon} className="w-5 h-5" /></button> ))}
+                    </nav>
+                </aside>
+            );
+        };
+        const Header = ({ breadcrumb }) => {
+             return (
+                <header className="h-16 flex items-center justify-between px-6 md:px-8 bg-white border-b border-slate-100 flex-shrink-0">
+                    <div><p className="text-sm font-medium text-slate-600">{breadcrumb}</p></div>
+                    <div className="flex items-center space-x-2">
+                         <img src="https://i.pravatar.cc/32?u=user1" alt="User Avatar" className="w-8 h-8 rounded-full" />
+                         <div><p className="text-sm font-semibold text-slate-800">Rui Freitas</p></div>
+                    </div>
+                </header>
+            );
+        };
+        const AppShell = ({ children, breadcrumb }) => (
+            <div className="flex w-full h-screen bg-slate-50">
+                <Sidebar />
+                <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
+                    <Header breadcrumb={breadcrumb} />
+                    <main className="flex-1 overflow-y-auto">{children}</main>
+                </div>
+            </div>
+        );
+
+        const ApplicantsPage = ({ onSelectCandidate }) => {
+            const tabs = ['New (23)', 'Qualified (1)', 'First contact (15)', 'Interview', 'Post Interview'];
+            const [activeTab, setActiveTab] = useState('New (23)');
+
+            return (
+                <div className="p-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 className="text-2xl font-bold text-slate-900">Applicant Pipeline</h2>
+                        <ButtonGroup><Button variant="secondary">Bulk Actions</Button><Button variant="primary">Source Candidates</Button></ButtonGroup>
+                    </div>
+                    <div className="border-b border-slate-200 mb-6">
+                        <nav className="flex items-center -mb-px space-x-6 overflow-x-auto">
+                            {tabs.map(tab => ( <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-base font-semibold whitespace-nowrap transition-colors ${activeTab === tab ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-800'}`}>{tab}</button>))}
+                        </nav>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table className="w-full">
+                            <thead><tr className="bg-slate-50 border-b border-slate-200 text-left text-xs text-slate-600 uppercase tracking-wider"><th className="p-4 font-bold">Name</th><th className="p-4 font-bold">Status</th><th className="p-4 font-bold">Stars</th></tr></thead>
+                            <tbody className="divide-y divide-slate-200">
+                                {mockApplicants.map(applicant => (
+                                    <tr key={applicant.id} className="hover:bg-blue-50 text-sm cursor-pointer transition-colors" onClick={() => onSelectCandidate(applicant.id)}>
+                                        <td className="p-4 font-medium text-blue-600 hover:underline">{applicant.firstName} {applicant.lastName}</td>
+                                        <td className="p-4"><StatusPill status={applicant.status} /></td>
+                                        <td className="p-4"><div className="flex items-center space-x-1 font-semibold text-slate-700"><Icon name="star" className="w-4 h-4 text-amber-400 fill-current" /><span>{applicant.stars.toFixed(1)}</span></div></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+        
+        const VersionToggle = ({ version, setVersion }) => (
+            <div className="fixed bottom-6 right-6 z-40 bg-slate-800 text-white rounded-full shadow-lg flex items-center p-1 text-sm font-medium">
+                <button onClick={() => setVersion('v1')} className={`px-3 py-1 rounded-full transition-colors ${version === 'v1' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>V1</button>
+                <button onClick={() => setVersion('v2')} className={`px-3 py-1 rounded-full transition-colors ${version === 'v2' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>V2</button>
+            </div>
+        );
+
+        const AiSummaryCard = ({ candidate }) => {
+            const [summary, setSummary] = useState('');
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                const generateSummary = async () => {
+                    setIsLoading(true); setSummary('');
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    const cvSummary = `Stephanie is a Senior Product Manager with a strong background in B2B SaaS, demonstrating expertise in product lifecycle management.`;
+                    const activityUpdate = `\n\n**Latest Activity:** Withdrew for personal reasons.`;
+                    setSummary(cvSummary + activityUpdate);
+                    setIsLoading(false);
+                };
+                generateSummary();
+            }, [candidate.id]);
+            
+            const formattedSummary = summary.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-800">$1</strong>');
+
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><Icon name="wand" className="w-5 h-5 mr-2 text-blue-600" /> AI Summary</h3>
+                    <div className="text-sm text-slate-600 min-h-[100px]">
+                        {isLoading ? <div className="flex items-center justify-center h-full"><Icon name="settings" className="w-6 h-6 animate-spin text-slate-400" /></div> : <p dangerouslySetInnerHTML={{ __html: formattedSummary.replace(/\n/g, '<br />') }}></p>}
+                    </div>
+                </div>
+            );
+        };
+        
+        const EditableListModal = ({ title, itemType, generatedItems, onConfirm, onClose, itemClass, itemClassHover }) => {
+            const [items, setItems] = useState(generatedItems);
+            const [newItem, setNewItem] = useState('');
+            const inputRef = useRef(null);
+
+            const removeItem = (itemToRemove) => setItems(items.filter(item => item !== itemToRemove));
+            const addItem = (e) => { e.preventDefault(); if (newItem && !items.includes(newItem)) { setItems([...items, newItem]); setNewItem(''); } };
+            useEffect(() => { inputRef.current?.focus(); }, []);
+
+            return ReactDOM.createPortal(
+                <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+                        <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+                            <h2 className="text-xl font-bold text-slate-800">Confirm AI {itemType}</h2>
+                            <Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}><Icon name="x" className="w-5 h-5"/></Button>
+                        </header>
+                        <main className="p-6">
+                            <div className={`flex flex-wrap gap-2 p-3 border border-slate-200 rounded-lg min-h-[80px] bg-slate-50`}>
+                                {items.map(item => ( <span key={item} className={`${itemClass} flex items-center`}>{item}<button onClick={() => removeItem(item)} className={`ml-1.5 ${itemClassHover}`}><Icon name="x" className="w-3 h-3" /></button></span> ))}
+                            </div>
+                            <form onSubmit={addItem} className="mt-4 flex gap-2">
+                                <input ref={inputRef} type="text" value={newItem} onChange={e => setNewItem(e.target.value)} className="flex-grow p-2 border border-slate-300 rounded-md sm:text-sm" placeholder={`Add another ${itemType.toLowerCase()}...`} />
+                                <Button type="submit" variant="secondary">Add</Button>
+                            </form>
+                        </main>
+                        <footer className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                            <ButtonGroup><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={() => onConfirm(items)}>Confirm</Button></ButtonGroup>
+                        </footer>
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+
+        const AiTagCard = ({ tags, onGenerate }) => (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">Tags</h3>
+                    <Button variant="secondary" onClick={onGenerate}><Icon name="wand" className="w-4 h-4 mr-2"/> Generate</Button>
+                </div>
+                <div className="flex flex-wrap gap-2 min-h-[40px]">
+                    {tags.length > 0 ? tags.map(tag => <span key={tag} className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">{tag}</span>) : <p className="text-sm text-slate-400">No tags added.</p>}
+                </div>
+            </div>
+        );
+        const AiSkillCard = ({ skills, onGenerate }) => (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">Skills</h3>
+                    <Button variant="secondary" onClick={onGenerate}><Icon name="wand" className="w-4 h-4 mr-2"/> Generate</Button>
+                </div>
+                <div className="flex flex-wrap gap-2 min-h-[40px]">
+                    {skills.length > 0 ? skills.map(skill => <span key={skill} className="bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full">{skill}</span>) : <p className="text-sm text-slate-400">No skills added.</p>}
+                </div>
+            </div>
+        );
+
+        const AiCopilotModal = ({ candidate, onClose, onGenerate }) => {
+            const [prompt, setPrompt] = useState(`Write a friendly follow-up asking for ${candidate.firstName}'s availability for a 30-minute call next week.`);
+            const [tone, setTone] = useState('Professional & Formal');
+            const [length, setLength] = useState('Standard');
+            const [isGenerating, setIsGenerating] = useState(false);
+
+            const handleGenerate = async (shortcutPrompt) => {
+                setIsGenerating(true);
+                const fullPrompt = { userInstruction: shortcutPrompt || prompt, candidateName: `${candidate.firstName} ${candidate.lastName}`, jobTitle: jobData.title, tone, length };
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                let subject = "Following up on your application";
+                let body = `Hi ${candidate.firstName},\n\nThank you for your interest in the ${jobData.title} role...`;
+
+                if (fullPrompt.userInstruction === 'Interview Confirmation') { /* ... */ } 
+                else if (fullPrompt.userInstruction.includes('rejection')) { /* ... */ }
+
+                onGenerate({ subject, body });
+                setIsGenerating(false);
+                onClose();
+            };
+            
+            const ShortcutCard = ({ title, children }) => (<div className="p-4 bg-slate-100 rounded-lg"><h4 className="font-bold text-slate-800 text-sm mb-2">{title}</h4><div className="grid grid-cols-2 gap-2">{children}</div></div>);
+            const ShortcutButton = ({ children, onClick }) => <button onClick={onClick} className="text-sm text-left p-2 bg-white rounded-md border border-slate-200 hover:bg-blue-50 hover:border-blue-300">{children}</button>;
+
+            return ReactDOM.createPortal(
+                 <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
+                        <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50"><h2 className="text-xl font-bold text-slate-800 flex items-center"><Icon name="wand" className="w-5 h-5 mr-2 text-blue-600"/> AI Email Co-pilot</h2><Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}><Icon name="x" className="w-5 h-5"/></Button></header>
+                        <main className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Your Instructions</label>
+                                <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows="3" className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <ShortcutCard title="Rejection"><ShortcutButton onClick={() => handleGenerate('Post-Screening rejection')}>Post-Screening</ShortcutButton><ShortcutButton onClick={() => handleGenerate('Post-Interview rejection')}>Post-Interview</ShortcutButton></ShortcutCard>
+                                <ShortcutCard title="Scheduling"><ShortcutButton onClick={() => handleGenerate('Interview Confirmation')}>Interview Confirmation</ShortcutButton><ShortcutButton onClick={() => handleGenerate('Request Availability')}>Request Availability</ShortcutButton></ShortcutCard>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">Tone</label><select value={tone} onChange={e => setTone(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md"><option>Friendly & Casual</option><option>Professional & Formal</option><option>Enthusiastic & Upbeat</option></select></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1">Length</label><select value={length} onChange={e => setLength(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md"><option>Concise</option><option>Standard</option><option>Detailed</option></select></div>
+                            </div>
+                        </main>
+                        <footer className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                            <ButtonGroup><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={() => handleGenerate()} disabled={isGenerating}>{isGenerating ? 'Generating...' : 'Generate Email'}</Button></ButtonGroup>
+                        </footer>
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+        const SendEmailPanel = ({ candidate, onClose, emailState, onEmailChange, onGenerateEmail, emailVersion }) => {
+            const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+            const [isPersonalising, setIsPersonalising] = useState(false);
+            
+            const handlePersonalise = async () => {
+                setIsPersonalising(true);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                const personalisedBody = emailState.body + `\n\nPS: I noticed your extensive experience with B2B SaaS products which is highly relevant for our team.`;
+                onGenerateEmail({ subject: emailState.subject, body: personalisedBody });
+                setIsPersonalising(false);
+            };
+
+            return (
+                 <React.Fragment>
+                    {isAiModalOpen && <AiCopilotModal candidate={candidate} onClose={() => setIsAiModalOpen(false)} onGenerate={onGenerateEmail} />}
+                    <div className="w-full h-full flex flex-col bg-white">
+                        <header className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0 bg-slate-50">
+                            <h2 className="text-xl font-bold text-slate-800">Send Email (v{emailVersion})</h2>
+                            <Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}><Icon name="x" className="w-5 h-5"/></Button>
+                        </header>
+                        <main className="flex-grow p-6 overflow-y-auto space-y-4">
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">To</label><input type="text" value={`${candidate.firstName} ${candidate.lastName}`} disabled className="w-full p-2 border border-slate-300 rounded-md bg-slate-100" /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1">Subject</label><input type="text" name="subject" value={emailState.subject} onChange={onEmailChange} className="w-full p-2 border border-slate-300 rounded-md" /></div>
+                            <div className="flex-grow flex flex-col">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+                                <textarea name="body" value={emailState.body} onChange={onEmailChange} className="w-full p-2 border border-slate-300 rounded-md flex-grow" rows="15"></textarea>
+                            </div>
+                        </main>
+                        <footer className="flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
+                            {emailVersion === 'v2' ? (
+                                <Button variant="secondary" onClick={() => setIsAiModalOpen(true)}><Icon name="wand" className="w-4 h-4 mr-2"/> AI Co-pilot</Button>
+                            ) : (
+                                <Button variant="secondary" onClick={handlePersonalise} disabled={!emailState.body || isPersonalising}>
+                                    <Icon name="wand" className={`w-4 h-4 mr-2 ${isPersonalising ? 'animate-spin' : ''}`}/> {isPersonalising ? 'Personalising...' : 'Personalise'}
+                                </Button>
+                            )}
+                            <ButtonGroup><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="primary">Send</Button></ButtonGroup>
+                        </footer>
+                    </div>
+                 </React.Fragment>
+            )
+        };
+        
+        const CandidateProfilePage = ({ candidate, onBack, onOpenEmail, ...props }) => {
+             return (
+                <div className="relative w-full h-full">
+                    {props.emailVersion && <VersionToggle version={props.emailVersion} setVersion={props.setEmailVersion} />}
+                    <div className="p-6">
+                         <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <button onClick={onBack} className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 mb-2"><Icon name="chevronLeft" className="w-4 h-4 mr-1" />Back to Applicants</button>
+                                <h2 className="text-2xl font-bold text-slate-900">{candidate.firstName} {candidate.lastName}</h2><p className="text-slate-600">{candidate.role}</p>
+                            </div>
+                            <ButtonGroup><Button variant="secondary">Actions</Button><Button variant="primary" onClick={onOpenEmail}><Icon name="mail" className="w-4 h-4 mr-2" />Send Email</Button></ButtonGroup>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2 space-y-6"><div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"><h3 className="text-lg font-bold text-slate-800 mb-4">CV / Resume</h3><div className="bg-slate-100 border border-slate-200 rounded-lg p-10 text-center"><Icon name="fileText" className="w-12 h-12 text-slate-400 mx-auto mb-2" /><p className="text-slate-500">CV document would be displayed here.</p></div></div></div>
+                            <div className="lg:col-span-1 space-y-6">
+                                <AiSummaryCard candidate={candidate} />
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Details</h3>
+                                    <div className="space-y-4 text-sm"><p><strong className="text-slate-600 w-20 inline-block">Status:</strong> <StatusPill status={candidate.status} /></p><p><strong className="text-slate-600 w-20 inline-block">Source:</strong> {candidate.source}</p><p><strong className="text-slate-600 w-20 inline-block">Applied:</strong> {candidate.applied}</p><p><strong className="text-slate-600 w-20 inline-block">Rating:</strong> {candidate.stars}/5.0</p></div>
+                                </div>
+                                <AiTagCard tags={props.tags} onGenerate={props.onGenerateTags} />
+                                <AiSkillCard skills={props.skills} onGenerate={props.onGenerateSkills} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             );
+        };
+        
+        function App() {
+            const [state, setState] = useState({
+                page: 'applicants', candidateId: null, isEmailOpen: false, emailVersion: 'v2', tags: [], skills: [], 
+                modals: { confirmTags: false, confirmSkills: false }, 
+                generated: { tags: [], skills: [] },
+                emailState: { subject: '', body: '' }
+            });
+
+            const handleSetState = (newState) => setState(prevState => ({ ...prevState, ...newState }));
+            
+            const handleSelectCandidate = (candidateId) => handleSetState({ page: 'candidateProfile', candidateId, tags: [], skills: [], emailState: { subject: '', body: '' } });
+            const handleBackToApplicants = () => handleSetState({ page: 'applicants', candidateId: null, isEmailOpen: false });
+            
+            const handleGenerateTags = async () => {
+                await new Promise(resolve => setTimeout(resolve, 1200));
+                handleSetState({ generated: { ...state.generated, tags: ['B2B SaaS', 'Product Management', 'Agile'] }, modals: { ...state.modals, confirmTags: true } });
+            };
+            const handleConfirmTags = (finalTags) => handleSetState({ tags: finalTags, modals: { ...state.modals, confirmTags: false } });
+            
+            const handleGenerateSkills = async () => {
+                await new Promise(resolve => setTimeout(resolve, 1400));
+                handleSetState({ generated: { ...state.generated, skills: ['Roadmap Planning', 'JIRA', 'Market Research'] }, modals: { ...state.modals, confirmSkills: true } });
+            };
+            const handleConfirmSkills = (finalSkills) => handleSetState({ skills: finalSkills, modals: { ...state.modals, confirmSkills: false } });
+
+            const handleEmailChange = (e) => {
+                const { name, value } = e.target;
+                handleSetState({ emailState: { ...state.emailState, [name]: value } });
+            };
+            const handleGenerateEmail = (generated) => {
+                handleSetState({ emailState: { subject: generated.subject, body: generated.body } });
+            };
+            
+            const selectedCandidate = mockApplicants.find(c => c.id === state.candidateId);
+            const getBreadcrumb = () => { 
+                 const jobInfo = `${jobData.id} ${jobData.title}`;
+                if (state.page === 'candidateProfile' && selectedCandidate) {
+                    return `${jobInfo} > Applicants > ${selectedCandidate.firstName} ${selectedCandidate.lastName}`;
+                }
+                return `${jobInfo} > Applicants`;
+            };
+
+            return (
+                <React.Fragment>
+                    <AppShell breadcrumb={getBreadcrumb()}>
+                        {state.page === 'applicants' && <ApplicantsPage onSelectCandidate={handleSelectCandidate} />}
+                        {state.page === 'candidateProfile' && (
+                            <CandidateProfilePage 
+                                candidate={selectedCandidate} 
+                                onBack={handleBackToApplicants} 
+                                onOpenEmail={() => handleSetState({ isEmailOpen: true })}
+                                {...state}
+                                setEmailVersion={(v) => handleSetState({ emailVersion: v })}
+                                onGenerateTags={handleGenerateTags} onGenerateSkills={handleGenerateSkills}
+                            />
+                        )}
+                    </AppShell>
+                    <div className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out w-full max-w-2xl ${state.isEmailOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                        {state.isEmailOpen && <SendEmailPanel candidate={selectedCandidate} onClose={() => handleSetState({ isEmailOpen: false })} emailState={state.emailState} onEmailChange={handleEmailChange} onGenerateEmail={handleGenerateEmail} emailVersion={state.emailVersion} />}
+                    </div>
+                    {state.modals.confirmTags && <EditableListModal itemType="Tags" generatedItems={state.generated.tags} onConfirm={handleConfirmTags} onClose={() => handleSetState({ modals: { ...state.modals, confirmTags: false }})} itemClass="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full" itemClassHover="text-blue-500 hover:text-blue-700" />}
+                    {state.modals.confirmSkills && <EditableListModal itemType="Skills" generatedItems={state.generated.skills} onConfirm={handleConfirmSkills} onClose={() => handleSetState({ modals: { ...state.modals, confirmSkills: false }})} itemClass="bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full" itemClassHover="text-slate-500 hover:text-slate-700" />}
+                </React.Fragment>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
