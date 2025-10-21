@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SaaS Platform - Exploration Prototype</title>
-    <!-- Rationale: CDN scripts are used to include necessary libraries without a build step. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        /* Rationale: A basic fade-in animation improves the perceived performance of modals and panels. */
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.98); }
             to { opacity: 1; transform: scale(1); }
@@ -25,8 +23,6 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Rationale: The entire React application is contained within this script tag.
-        // Babel will transpile the JSX in the browser on the fly. This is suitable only for development/prototyping.
         const { useState, useEffect, useRef } = React;
 
         const Icon = ({ name, className = 'w-6 h-6' }) => {
@@ -287,85 +283,141 @@
                 document.body
             );
         };
-        const PersonaliseConfirmationModal = ({ original, suggestion, onConfirm, onClose }) => {
-            const [dropdownOpen, setDropdownOpen] = useState(false);
-            const dropdownRef = useRef(null);
 
-            const handleAction = (action) => {
-                onConfirm(action);
+        const AiAssistantModal = ({ onGenerate, onClose, currentBody }) => {
+            const [prompt, setPrompt] = useState('');
+            const inputRef = useRef(null);
+
+            useEffect(() => { inputRef.current?.focus(); }, []);
+
+            const handleGenerate = async () => {
+                if (!prompt.trim()) return;
+                await onGenerate(prompt);
                 onClose();
             };
 
-            useEffect(() => {
-                const handleClickOutside = (event) => {
-                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                        setDropdownOpen(false);
-                    }
-                };
-                document.addEventListener("mousedown", handleClickOutside);
-                return () => document.removeEventListener("mousedown", handleClickOutside);
-            }, [dropdownRef]);
-
             return ReactDOM.createPortal(
-                 <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
                         <header className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-                            <h2 className="text-xl font-bold text-slate-800">AI Suggestion</h2>
-                            <Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}><Icon name="x" className="w-5 h-5"/></Button>
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center">
+                                <Icon name="wand" className="w-5 h-5 mr-2 text-blue-600"/> AI Assistant
+                            </h2>
+                            <Button variant="ghost" className="p-2 h-8 w-8" onClick={onClose}>
+                                <Icon name="x" className="w-5 h-5"/>
+                            </Button>
                         </header>
                         <main className="p-6">
-                             <div>
-                                <h3 className="text-sm font-bold text-blue-600 uppercase mb-2">AI Suggestion</h3>
-                                <div className="p-3 bg-blue-50 rounded-md text-sm text-slate-800 h-48 overflow-y-auto whitespace-pre-wrap">{suggestion}</div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                What would you like the AI to do?
+                            </label>
+                            <textarea 
+                                ref={inputRef}
+                                value={prompt} 
+                                onChange={e => setPrompt(e.target.value)}
+                                placeholder="e.g., Make this more professional, Add a closing paragraph, Rewrite in a friendly tone..."
+                                rows="4" 
+                                className="w-full p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            />
+                        
+                        <div data-test-id="shortcuts-row">
+                            <div className="text-xs font-semibold text-slate-600 mb-2">Shortcuts</div>
+                            <div className="flex flex-wrap gap-2">
+                                <button type="button" className="px-3 py-1.5 text-sm rounded-full border border-slate-300 hover:bg-slate-50" onClick={() => { onGenerate('__shortcut__:rejection'); onClose(); }}>Rejection email</button>
+                                <button type="button" className="px-3 py-1.5 text-sm rounded-full border border-slate-300 hover:bg-slate-50" onClick={() => { onGenerate('__shortcut__:followup'); onClose(); }}>Follow-up email</button>
+                                <button type="button" className="px-3 py-1.5 text-sm rounded-full border border-slate-300 hover:bg-slate-50" onClick={() => { onGenerate('__shortcut__:schedule'); onClose(); }}>Schedule interview</button>
                             </div>
+                        </div>
                         </main>
-                        <footer className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
-                            <Button variant="secondary" onClick={onClose}>Keep Original</Button>
-                             <div className="relative inline-flex" ref={dropdownRef}>
-                                <Button variant="primary" className="rounded-r-none" onClick={() => handleAction('replace')}>Replace Text</Button>
-                                <button onClick={() => setDropdownOpen(!dropdownOpen)} className="px-2 py-2 bg-blue-700 text-white rounded-r-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600">
-                                    <Icon name="chevronDown" className="w-4 h-4"/>
-                                </button>
-                                {dropdownOpen && (
-                                    <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-lg z-10 border border-slate-200">
-                                        <a href="#" onClick={(e) => { e.preventDefault(); handleAction('insert'); }} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Insert Below</a>
-                                    </div>
-                                )}
-                            </div>
+        
+                        <footer className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                            <ButtonGroup>
+                                <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                                <Button variant="primary" onClick={handleGenerate} disabled={!prompt.trim()}>
+                                    Generate
+                                </Button>
+                            </ButtonGroup>
                         </footer>
                     </div>
                 </div>,
                 document.body
-            )
+            );
         };
+
         const SendEmailPanel = ({ candidate, onClose, emailState, onEmailChange, onGenerateEmail, emailVersion }) => {
             const [isAiModalOpen, setIsAiModalOpen] = useState(false);
             const [isPersonalising, setIsPersonalising] = useState(false);
-            const [isPersonaliseModalOpen, setIsPersonaliseModalOpen] = useState(false);
-            const [aiSuggestion, setAiSuggestion] = useState('');
+            const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+            const [isGeneratingAssistant, setIsGeneratingAssistant] = useState(false);
+            // Handle selecting a canned email template
+            const handleTemplateSelect = (e) => {
+                const val = e.target.value;
+                if (val === '__placeholder__') return;
+                if (val === 'rejected') {
+                    const first = candidate?.firstName || 'there';
+                    const role = (typeof jobData !== 'undefined' && jobData?.title) ? jobData.title : 'the role';
+                    const body = `Hi ${first},
+
+Thank you for your interest in ${role}. After careful review, we will not be moving forward at this time. We truly appreciate the time you invested in the process and encourage you to apply again for future openings that match your experience.
+
+If you’d like feedback, reply to this email and I’ll gladly share a few pointers.
+
+Best regards,
+{{Your Name}}`;
+                    onGenerateEmail({ subject: emailState.subject, body });
+                }
+                // reset dropdown to placeholder for clarity
+                e.target.value = '__placeholder__';
+            };
+    
             
             const handlePersonalise = async () => {
                 setIsPersonalising(true);
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 const suggestion = emailState.body + `\n\nPS: I noticed your extensive experience with B2B SaaS products at Acme Corp, which is highly relevant for our team.`;
-                setAiSuggestion(suggestion);
+                onGenerateEmail({ subject: emailState.subject, body: suggestion });
                 setIsPersonalising(false);
-                setIsPersonaliseModalOpen(true);
             };
 
-            const handleConfirmPersonalisation = (actionType) => {
-                if(actionType === 'replace') {
-                    onGenerateEmail({ subject: emailState.subject, body: aiSuggestion });
-                } else if (actionType === 'insert') {
-                    onGenerateEmail({ subject: emailState.subject, body: emailState.body + '\n\n' + aiSuggestion });
+            const handleAiAssistant = async (userPrompt) => {
+                setIsGeneratingAssistant(true);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Simulate AI processing the user's instruction
+                let processedBody = emailState.body;
+
+                // Shortcut intents (templates)
+                if (userPrompt && userPrompt.startsWith('__shortcut__:')) {
+                    const intent = userPrompt.split(':')[1];
+                    const first = candidate?.firstName || 'there';
+                    const role = (typeof jobData !== 'undefined' && jobData?.title) ? jobData.title : 'the role';
+                    const signature = 'Best regards,\n{{Your Name}}';
+                    if (intent === 'rejection') {
+                        processedBody = `Hi ${first},\n\nThank you for your interest in ${role}. After careful review, we will not be moving forward at this time. We were impressed by your background and will keep your profile on file for future opportunities.\n\nIf you’d like feedback, reply to this email and I’ll gladly share a few pointers.\n\n${signature}`;
+                    } else if (intent === 'followup') {
+                        processedBody = `Hi ${first},\n\nI wanted to follow up on your application for ${role}. Do you have a few minutes this week to share any updates or questions? I’m happy to provide more details on the process.\n\nLooking forward to hearing from you.\n\n${signature}`;
+                    } else if (intent === 'schedule') {
+                        processedBody = `Hi ${first},\n\nWe’d love to schedule a short interview for ${role}. Please share your availability for the next few days, or pick a time that works for you here: [Insert scheduling link].\n\nSuggested slots (your local time):\n• Tue 10:00–10:30\n• Wed 14:00–14:30\n• Thu 16:00–16:30\n\n${signature}`;
+                    }
+                } else
+                
+                if (userPrompt.toLowerCase().includes('professional')) {
+                    processedBody = emailState.body.replace(/Hi /g, 'Dear ');
+                } else if (userPrompt.toLowerCase().includes('friendly')) {
+                    processedBody = emailState.body + '\n\nLooking forward to hearing from you!';
+                } else {
+                    // Generic improvement
+                    processedBody = emailState.body + '\n\n[AI enhanced based on: ' + userPrompt + ']';
                 }
-                setIsPersonaliseModalOpen(false);
+                
+                onGenerateEmail({ subject: emailState.subject, body: processedBody });
+                setIsGeneratingAssistant(false);
             };
 
             return (
                  <React.Fragment>
                     {isAiModalOpen && <AiCopilotModal candidate={candidate} onClose={() => setIsAiModalOpen(false)} onGenerate={onGenerateEmail} />}
-                    {isPersonaliseModalOpen && <PersonaliseConfirmationModal suggestion={aiSuggestion} onConfirm={handleConfirmPersonalisation} onClose={() => setIsPersonaliseModalOpen(false)} />}
+                    {isAiAssistantOpen && <AiAssistantModal currentBody={emailState.body} onGenerate={handleAiAssistant} onClose={() => setIsAiAssistantOpen(false)} />}
                     <div className="w-full h-full flex flex-col bg-white">
                         <header className="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0 bg-slate-50">
                             <h2 className="text-xl font-bold text-slate-800">Send Email (v{emailVersion})</h2>
@@ -374,10 +426,75 @@
                         <main className="flex-grow p-6 overflow-y-auto space-y-4">
                             <div><label className="block text-sm font-medium text-slate-700 mb-1">To</label><input type="text" value={`${candidate.firstName} ${candidate.lastName}`} disabled className="w-full p-2 border border-slate-300 rounded-md bg-slate-100" /></div>
                             <div><label className="block text-sm font-medium text-slate-700 mb-1">Subject</label><input type="text" name="subject" value={emailState.subject} onChange={onEmailChange} className="w-full p-2 border border-slate-300 rounded-md" /></div>
-                            <div className="flex-grow flex flex-col">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
-                                <textarea name="body" value={emailState.body} onChange={onEmailChange} className="w-full p-2 border border-slate-300 rounded-md flex-grow" rows="15"></textarea>
-                            </div>
+                            
+            <div className="flex-grow flex flex-col">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Body</label>
+
+                {/* Toolbar with AI Assistant on the left (screenshot-style) */}
+                <div className="border border-slate-300 bg-white rounded-t-md px-2 py-2 flex items-center gap-2 text-sm">
+                    {/* AI Assistant trigger */}
+                    <button 
+                        onClick={() => setIsAiAssistantOpen(true)} 
+                        disabled={isGeneratingAssistant}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-800 disabled:opacity-50"
+                        title="AI Assistant"
+                    >
+                        <span className="inline-flex items-center">
+                            <Icon name="wand" className={`w-3.5 h-3.5 mr-1 ${isGeneratingAssistant ? 'animate-spin' : ''}`} />
+                        </span>
+                        AI Assistant
+                    </button>
+                    {/* Email Templates dropdown */}
+                    <div className="relative">
+                        <select
+                            onChange={(e) => handleTemplateSelect(e)}
+                            className="ml-2 px-2 py-1 text-sm rounded-md border border-slate-300 bg-white text-slate-800"
+                            defaultValue="__placeholder__"
+                            title="Email templates"
+                        >
+                            <option value="__placeholder__" disabled>Templates</option>
+                            <option value="rejected">Rejected email</option>
+                        </select>
+                    </div>
+
+                    <span className="h-5 w-px bg-slate-300" />
+
+                    {/* Formatting icons (visual only in this prototype) */}
+                    <button className="px-2 py-1 rounded hover:bg-slate-100 font-bold" title="Bold">B</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100 italic" title="Italic">I</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100 underline" title="Underline">U</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Text color">A</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Highlight">🖊️</button>
+
+                    <span className="h-5 w-px bg-slate-300" />
+
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="H1">H1</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="H2">H2</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="H3">H3</button>
+
+                    <span className="h-5 w-px bg-slate-300" />
+
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Bulleted list">•</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Numbered list">1.</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Decrease indent">↩︎</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Increase indent">↪︎</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Align left">≡</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Align center">≣</button>
+                    <button className="px-2 py-1 rounded hover:bg-slate-100" title="Align right">≡</button>
+
+                    <span className="ml-auto text-xs text-slate-400 pr-1">Rich text toolbar (demo)</span>
+                </div>
+
+                {/* Textarea attaches to toolbar */}
+                <textarea 
+                    name="body" 
+                    value={emailState.body} 
+                    onChange={onEmailChange} 
+                    className="w-full p-2 border border-t-0 border-slate-300 rounded-b-md flex-grow" 
+                    rows="15"
+                ></textarea>
+            </div>
+
                         </main>
                         <footer className="flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
                             {emailVersion === 'v2' ? (
@@ -494,4 +611,3 @@
     </script>
 </body>
 </html>
-
